@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>タイ語チャレンジ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'M PLUS Rounded 1c', sans-serif;
+    background: #1a1000;
+    color: #fff;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  /* ── TOP BAR ── */
+  #topbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 14px;
+    background: #111;
+    border-bottom: 2px solid #333;
+    flex-shrink: 0;
+    z-index: 20;
+  }
+
+  #topbar h1 {
+    font-size: 0.9rem;
+    font-weight: 900;
+    color: #f4a83a;
+    white-space: nowrap;
+    letter-spacing: 0.04em;
+  }
+
+  .vsep { width: 1px; height: 26px; background: #444; flex-shrink: 0; }
+
+  #level-select {
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 700;
+    background: #222;
+    color: #fff;
+    border: 1.5px solid #f4a83a;
+    border-radius: 8px;
+    padding: 4px 10px;
+    cursor: pointer;
+    outline: none;
+  }
+  #level-select option, #level-select optgroup { background: #1a1000; }
+
+  /* ── TOOL BAR ── */
+  #toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 14px;
+    background: #1e1408;
+    border-bottom: 1.5px solid #333;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    z-index: 19;
+  }
+
+  .tool-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+  }
+
+  .tool-group { display: flex; align-items: center; gap: 7px; }
+
+  /* Tool buttons */
+  .tool-btn {
+    height: 34px;
+    padding: 0 12px;
+    border-radius: 8px;
+    border: 2px solid #444;
+    background: #2a2010;
+    color: #ccc;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.12s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .tool-btn:hover { border-color: #f4a83a; color: #f4a83a; }
+  .tool-btn.active {
+    background: #e85d26;
+    border-color: #e85d26;
+    color: #fff;
+    box-shadow: 0 2px 10px rgba(232,93,38,0.45);
+  }
+  .tool-btn.active.eraser-active {
+    background: #444;
+    border-color: #888;
+    box-shadow: none;
+  }
+
+  /* Color swatches */
+  #color-swatches { display: flex; gap: 5px; align-items: center; }
+
+  .swatch {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2.5px solid transparent;
+    transition: transform 0.12s, border-color 0.12s;
+    flex-shrink: 0;
+  }
+  .swatch:hover { transform: scale(1.2); }
+  .swatch.active { border-color: #fff; transform: scale(1.18); box-shadow: 0 0 0 1px #000; }
+
+  #custom-color {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    border: 2.5px solid #666;
+    cursor: pointer;
+    padding: 0;
+    background: none;
+    flex-shrink: 0;
+  }
+
+  /* Action buttons */
+  #undo-btn, #clear-btn {
+    font-size: 0.95rem;
+    padding: 0 10px;
+  }
+
+  /* ── CANVAS AREA ── */
+  #canvas-wrap {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  /* Background image — always 100% opacity, fit inside */
+  #bg-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+    pointer-events: none;
+    z-index: 1;
+    display: none;
+  }
+
+  /* Drawing canvas on top */
+  #draw-canvas {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+  }
+
+  /* Placeholder */
+  #placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: #ccc;
+    background: #f7f3ec;
+    z-index: 0;
+  }
+  #placeholder .emoji { font-size: 3.5rem; }
+  #placeholder p { font-size: 1rem; font-weight: 700; color: #aaa; }
+
+  /* Cursor preview dot */
+  #cursor-dot {
+    position: fixed;
+    pointer-events: none;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 100;
+    mix-blend-mode: multiply;
+    transition: width 0.1s, height 0.1s;
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<!-- CURSOR DOT -->
+<div id="cursor-dot"></div>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <h1>🇹🇭 タイ語チャレンジ</h1>
+  <div class="vsep"></div>
+  <span class="tool-label">レベル</span>
+  <select id="level-select">
+    <option value="">-- レベルを選んでください --</option>
+    <optgroup label="★ レベル1">
+      <option value="1a">チャレンジ 1a ★</option>
+      <option value="1b">チャレンジ 1b ★</option>
+      <option value="1c">チャレンジ 1c ★</option>
+    </optgroup>
+    <optgroup label="★★ レベル2">
+      <option value="2a">チャレンジ 2a ★★</option>
+      <option value="2b">チャレンジ 2b ★★</option>
+      <option value="2c">チャレンジ 2c ★★</option>
+      <option value="2d">チャレンジ 2d ★★</option>
+    </optgroup>
+    <optgroup label="★★★ レベル3">
+      <option value="3a">チャレンジ 3a ★★★</option>
+      <option value="3b">チャレンジ 3b ★★★</option>
+      <option value="3c">チャレンジ 3c ★★★</option>
+      <option value="3d">チャレンジ 3d ★★★</option>
+    </optgroup>
+    <optgroup label="😮 レベル4">
+      <option value="4a">チャレンジ 4a 😮</option>
+      <option value="4b">チャレンジ 4b 😮</option>
+    </optgroup>
+    <optgroup label="🤯 レベル5">
+      <option value="5a">チャレンジ 5a 🤯</option>
+      <option value="5b">チャレンジ 5b 🤯</option>
+    </optgroup>
+  </select>
+</div>
+
+<!-- TOOL BAR -->
+<div id="toolbar">
+
+  <div class="tool-group">
+    <button class="tool-btn active" id="btn-pen">✏️ ペン <span style="font-size:0.7rem;opacity:0.7">(3px)</span></button>
+    <button class="tool-btn" id="btn-eraser">⌫ 消しゴム <span style="font-size:0.7rem;opacity:0.7">(80px)</span></button>
+  </div>
+
+  <div class="vsep"></div>
+
+  <div class="tool-group">
+    <span class="tool-label">色</span>
+    <div id="color-swatches">
+      <div class="swatch active" style="background:#e85d26" data-color="#e85d26"></div>
+      <div class="swatch" style="background:#111111" data-color="#111111"></div>
+      <div class="swatch" style="background:#1a6fc4" data-color="#1a6fc4"></div>
+      <div class="swatch" style="background:#27ae60" data-color="#27ae60"></div>
+      <div class="swatch" style="background:#f4a83a" data-color="#f4a83a"></div>
+      <div class="swatch" style="background:#9b59b6" data-color="#9b59b6"></div>
+      <div class="swatch" style="background:#e74c3c" data-color="#e74c3c"></div>
+      <div class="swatch" style="background:#fff;outline:1px solid #bbb" data-color="#ffffff"></div>
+      <input type="color" id="custom-color" value="#e85d26" title="カスタム">
+    </div>
+  </div>
+
+  <div class="vsep"></div>
+
+  <div class="tool-group">
+    <button class="tool-btn" id="undo-btn" title="元に戻す (Ctrl+Z)">↩ 戻す</button>
+    <button class="tool-btn" id="clear-btn" title="全てクリア">🗑 クリア</button>
+  </div>
+
+</div>
+
+<!-- CANVAS AREA -->
+<div id="canvas-wrap">
+  <div id="placeholder">
+    <div class="emoji">🇹🇭</div>
+    <p>レベルを選んで練習スタート！</p>
+  </div>
+  <img id="bg-img" alt="worksheet background" draggable="false">
+  <canvas id="draw-canvas"></canvas>
+</div>
+
+<script>
+// ── ELEMENTS ──────────────────────────────────────────────────────────────
+const canvas      = document.getElementById('draw-canvas');
+const ctx         = canvas.getContext('2d');
+const wrap        = document.getElementById('canvas-wrap');
+const bgImg       = document.getElementById('bg-img');
+const placeholder = document.getElementById('placeholder');
+const cursorDot   = document.getElementById('cursor-dot');
+
+// ── CONSTANTS ─────────────────────────────────────────────────────────────
+const PEN_SIZE    = 3;
+const ERASER_SIZE = 80;
+
+// ── STATE ─────────────────────────────────────────────────────────────────
+let tool      = 'pen';
+let color     = '#e85d26';
+let isDrawing = false;
+let lastX = 0, lastY = 0;
+let undoStack = [];
+
+// ── RESIZE CANVAS ─────────────────────────────────────────────────────────
+function resizeCanvas() {
+  const prev = canvas.toDataURL();
+  canvas.width  = wrap.clientWidth;
+  canvas.height = wrap.clientHeight;
+  // Restore drawing
+  const img = new Image();
+  img.src = prev;
+  img.onload = () => ctx.drawImage(img, 0, 0);
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+// ── DRAWING HELPERS ───────────────────────────────────────────────────────
+function getPos(e) {
+  const r = canvas.getBoundingClientRect();
+  if (e.touches && e.touches.length) {
+    return { x: e.touches[0].clientX - r.left, y: e.touches[0].clientY - r.top };
+  }
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+
+function currentSize() {
+  return tool === 'eraser' ? ERASER_SIZE : PEN_SIZE;
+}
+
+function saveUndo() {
+  undoStack.push(canvas.toDataURL());
+  if (undoStack.length > 40) undoStack.shift();
+}
+
+// ── DRAW EVENTS ───────────────────────────────────────────────────────────
+canvas.addEventListener('mousedown', onStart);
+canvas.addEventListener('touchstart', e => { e.preventDefault(); onStart(e); }, { passive: false });
+canvas.addEventListener('mousemove', onMove);
+canvas.addEventListener('touchmove', e => { e.preventDefault(); onMove(e); }, { passive: false });
+canvas.addEventListener('mouseup', onStop);
+canvas.addEventListener('touchend', onStop);
+canvas.addEventListener('mouseleave', onStop);
+
+function onStart(e) {
+  saveUndo();
+  isDrawing = true;
+  const { x, y } = getPos(e);
+  lastX = x; lastY = y;
+  // Draw a dot
+  ctx.beginPath();
+  const s = currentSize();
+  if (tool === 'eraser') {
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.arc(x, y, s / 2, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0,0,0,1)';
+  } else {
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.arc(x, y, s / 2, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+  }
+  ctx.fill();
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+function onMove(e) {
+  // Update cursor dot
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  const s = currentSize();
+  cursorDot.style.left = clientX + 'px';
+  cursorDot.style.top  = clientY + 'px';
+  cursorDot.style.width  = s + 'px';
+  cursorDot.style.height = s + 'px';
+  if (tool === 'eraser') {
+    cursorDot.style.background = 'rgba(180,180,180,0.5)';
+    cursorDot.style.border = '2px solid #999';
+  } else {
+    cursorDot.style.background = color + '99';
+    cursorDot.style.border = '2px solid ' + color;
+  }
+
+  if (!isDrawing) return;
+  const { x, y } = getPos(e);
+  ctx.beginPath();
+  ctx.moveTo(lastX, lastY);
+  ctx.lineTo(x, y);
+  ctx.lineWidth = currentSize();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  if (tool === 'eraser') {
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.strokeStyle = 'rgba(0,0,0,1)';
+  } else {
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.strokeStyle = color;
+  }
+  ctx.stroke();
+  ctx.globalCompositeOperation = 'source-over';
+  lastX = x; lastY = y;
+}
+
+function onStop() {
+  isDrawing = false;
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+// Show/hide cursor dot
+canvas.addEventListener('mouseenter', () => { cursorDot.style.display = 'block'; canvas.style.cursor = 'none'; });
+canvas.addEventListener('mouseleave', () => { cursorDot.style.display = 'none'; canvas.style.cursor = 'default'; });
+
+// ── LEVEL SELECT ──────────────────────────────────────────────────────────
+document.getElementById('level-select').addEventListener('change', e => {
+  const key = e.target.value;
+  if (!key) {
+    bgImg.style.display = 'none';
+    placeholder.style.display = 'flex';
+    return;
+  }
+  bgImg.src = `sheets/${key}.webp`;
+  bgImg.style.display = 'block';
+  placeholder.style.display = 'none';
+  // Clear canvas on level change
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  undoStack = [];
+});
+
+// ── TOOL BUTTONS ──────────────────────────────────────────────────────────
+document.getElementById('btn-pen').addEventListener('click', () => {
+  tool = 'pen';
+  document.getElementById('btn-pen').classList.add('active');
+  document.getElementById('btn-pen').classList.remove('eraser-active');
+  document.getElementById('btn-eraser').classList.remove('active');
+});
+
+document.getElementById('btn-eraser').addEventListener('click', () => {
+  tool = 'eraser';
+  document.getElementById('btn-eraser').classList.add('active', 'eraser-active');
+  document.getElementById('btn-pen').classList.remove('active');
+});
+
+// ── COLOR ─────────────────────────────────────────────────────────────────
+document.querySelectorAll('.swatch').forEach(s => {
+  s.addEventListener('click', () => {
+    color = s.dataset.color;
+    document.querySelectorAll('.swatch').forEach(x => x.classList.remove('active'));
+    s.classList.add('active');
+    document.getElementById('custom-color').value = color === '#ffffff' ? '#ffffff' : color;
+    // Auto-switch to pen
+    tool = 'pen';
+    document.getElementById('btn-pen').classList.add('active');
+    document.getElementById('btn-eraser').classList.remove('active', 'eraser-active');
+  });
+});
+
+document.getElementById('custom-color').addEventListener('input', e => {
+  color = e.target.value;
+  document.querySelectorAll('.swatch').forEach(x => x.classList.remove('active'));
+  tool = 'pen';
+  document.getElementById('btn-pen').classList.add('active');
+  document.getElementById('btn-eraser').classList.remove('active', 'eraser-active');
+});
+
+// ── UNDO / CLEAR ──────────────────────────────────────────────────────────
+document.getElementById('undo-btn').addEventListener('click', undo);
+document.getElementById('clear-btn').addEventListener('click', () => {
+  saveUndo();
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+});
+
+function undo() {
+  if (!undoStack.length) return;
+  const img = new Image();
+  img.src = undoStack.pop();
+  img.onload = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0);
+  };
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); }
+  if (e.key === 'e' || e.key === 'E') { document.getElementById('btn-eraser').click(); }
+  if (e.key === 'p' || e.key === 'P') { document.getElementById('btn-pen').click(); }
+});
+</script>
+</body>
+</html>
