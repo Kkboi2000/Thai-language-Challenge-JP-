@@ -1,0 +1,22 @@
+{
+  "name": "タイ語チャレンジ",
+  "short_name": "タイ語",
+  "description": "タイ語と日本語のマッチング練習",
+  "start_url": "./index.html",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#1a1000",
+  "theme_color": "#1a1000",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

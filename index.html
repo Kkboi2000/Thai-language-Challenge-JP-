@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>タイ語チャレンジ</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a1000">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="タイ語">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;900&display=swap');
 
@@ -488,6 +495,17 @@ document.addEventListener('keydown', e => {
   if (e.key === 'e' || e.key === 'E') { document.getElementById('btn-eraser').click(); }
   if (e.key === 'p' || e.key === 'P') { document.getElementById('btn-pen').click(); }
 });
+</script>
+
+<script>
+// Register Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(() => console.log('SW registered'))
+      .catch(e => console.log('SW failed:', e));
+  });
+}
 </script>
 </body>
 </html>
