@@ -3,7 +3,7 @@
   "short_name": "タイ語",
   "description": "タイ語と日本語のマッチング練習",
   "start_url": "./index.html",
-  "display": "fullscreen",
+  "display": "standalone",
   "orientation": "portrait",
   "background_color": "#1a1000",
   "theme_color": "#1a1000",
