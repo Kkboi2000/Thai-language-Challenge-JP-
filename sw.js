@@ -1,9 +1,13 @@
-const CACHE = 'thai-challenge-v1';
+const CACHE = 'thai-challenge-v2';
 
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
+  './fonts/mplus-japanese-700.woff2',
+  './fonts/mplus-latin-700.woff2',
+  './fonts/mplus-japanese-900.woff2',
+  './fonts/mplus-latin-900.woff2',
   './sheets/1a.webp',
   './sheets/1b.webp',
   './sheets/1c.webp',
