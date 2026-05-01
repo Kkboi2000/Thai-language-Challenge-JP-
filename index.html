@@ -155,6 +155,45 @@
   #level-select:focus { box-shadow: 0 0 0 3px var(--accent-soft); }
   #level-select option, #level-select optgroup { background: var(--bg-0); }
 
+  /*
+   * Level badge — derived from the loaded worksheet's filename (1a→★, 4b→😮, etc).
+   * The user never sets this directly; it surfaces what the worksheet already says.
+   * Hidden when no worksheet is loaded so it doesn't suggest a level out of context.
+   */
+  #level-badge {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    height: 28px;
+    min-width: 28px;
+    padding: 0 9px;
+    border-radius: 14px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    border: 1.5px solid var(--accent);
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition:
+      background var(--t-slow) var(--ease),
+      border-color var(--t-slow) var(--ease),
+      color var(--t-slow) var(--ease),
+      transform var(--t-med) var(--ease),
+      opacity var(--t-med) var(--ease);
+    box-shadow: 0 0 12px var(--accent-soft);
+  }
+  #level-badge.show {
+    display: inline-flex;
+    animation: badgePop var(--t-med) var(--ease);
+  }
+  @keyframes badgePop {
+    0%   { transform: scale(0.6); opacity: 0; }
+    60%  { transform: scale(1.12); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
   /* ─── TOOL BAR ──────────────────────────────────────────────────────── */
   #toolbar {
     display: flex;
@@ -330,6 +369,7 @@
   /* ─── RESPONSIVE — VERY NARROW ──────────────────────────────────────── */
   @media (max-width: 380px) {
     #topbar h1 .label-jp { display: none; }
+    #level-badge { display: none !important; }   /* keep topbar tight */
     .swatch, #custom-color { width: 22px; height: 22px; }
     #color-swatches { gap: 3px; padding: 3px; }
     .tool-btn { height: 34px; padding: 0 8px; }
@@ -446,34 +486,36 @@
 <div id="topbar">
   <h1>🇹🇭 <span class="label-jp">タイ語チャレンジ</span></h1>
   <div class="vsep"></div>
-  <select id="level-select" aria-label="レベル選択">
-    <option value="">-- レベルを選んでください --</option>
-    <optgroup label="★ レベル1">
+  <select id="level-select" aria-label="チャレンジ選択">
+    <option value="">チャレンジを選ぶ ↓</option>
+    <optgroup label="★ かんたん">
       <option value="1a">チャレンジ 1a ★</option>
       <option value="1b">チャレンジ 1b ★</option>
       <option value="1c">チャレンジ 1c ★</option>
     </optgroup>
-    <optgroup label="★★ レベル2">
+    <optgroup label="★★ ふつう">
       <option value="2a">チャレンジ 2a ★★</option>
       <option value="2b">チャレンジ 2b ★★</option>
       <option value="2c">チャレンジ 2c ★★</option>
       <option value="2d">チャレンジ 2d ★★</option>
     </optgroup>
-    <optgroup label="★★★ レベル3">
+    <optgroup label="★★★ むずかしい">
       <option value="3a">チャレンジ 3a ★★★</option>
       <option value="3b">チャレンジ 3b ★★★</option>
       <option value="3c">チャレンジ 3c ★★★</option>
       <option value="3d">チャレンジ 3d ★★★</option>
     </optgroup>
-    <optgroup label="😮 レベル4">
+    <optgroup label="😮 むずい!">
       <option value="4a">チャレンジ 4a 😮</option>
       <option value="4b">チャレンジ 4b 😮</option>
     </optgroup>
-    <optgroup label="🤯 レベル5">
+    <optgroup label="🤯 やばい!!">
       <option value="5a">チャレンジ 5a 🤯</option>
       <option value="5b">チャレンジ 5b 🤯</option>
     </optgroup>
   </select>
+  <!-- Level badge — auto-derived from the loaded worksheet, lights up in accent color -->
+  <div id="level-badge" aria-live="polite"></div>
 </div>
 
 <!-- TOOL BAR ── LEFT: actions │ RIGHT: pen / eraser / colors ── -->
@@ -509,7 +551,7 @@
 <div id="canvas-wrap">
   <div id="placeholder">
     <div class="emoji">🇹🇭</div>
-    <p>レベルを選んで練習スタート！</p>
+    <p>チャレンジを選んでスタート！</p>
     <div class="pulse"></div>
   </div>
   <img id="bg-img" alt="worksheet background" draggable="false">
@@ -535,19 +577,30 @@ const UNDO_LIMIT     = 40;
 const DEFAULT_COLOR  = '#111111';   // black-ish — easier on the eye than pure #000
 
 /**
- * Theme palette — one anchor color per level.
- * Level 1 = green (fresh) → 5 = red (intense). Levels in between interpolate
- * through nature → harvest → heat. This is the heartbeat of the UI:
- * topbar glow, level select border, pen-active button, focus rings.
+ * Level definitions — single source of truth.
+ * The level is DERIVED from the worksheet key (e.g. "1a" → level 1, "5b" → level 5).
+ * The user never picks a level directly; they pick a worksheet, and the worksheet
+ * tells the app what level it is. Each level carries:
+ *   - color: drives the entire UI accent (topbar glow, pen button, focus rings…)
+ *   - badge: the difficulty marker the worksheet itself shows (★, ★★, 😮, 🤯)
+ * Level 1 = green (fresh growth) → 5 = red (molten heat). The two visual scales
+ * (color and symbol) reinforce each other.
  */
-const LEVEL_THEMES = {
-  '1': '#27ae60', // green
-  '2': '#82c91e', // lime
-  '3': '#f4a83a', // amber (the original brand orange)
-  '4': '#ef7c1c', // deep orange
-  '5': '#e23b2b', // red
+const LEVELS = {
+  '1': { color: '#27ae60', badge: '★' },         // green
+  '2': { color: '#82c91e', badge: '★★' },        // lime
+  '3': { color: '#f4a83a', badge: '★★★' },       // amber (original brand)
+  '4': { color: '#ef7c1c', badge: '😮' },        // deep orange
+  '5': { color: '#e23b2b', badge: '🤯' },        // red
 };
 const DEFAULT_THEME = '#f4a83a';
+
+/** Pull the level digit from a worksheet key. "3b" → "3", "" → null. */
+function levelFromKey(key) {
+  if (!key) return null;
+  const ch = key.charAt(0);
+  return LEVELS[ch] ? ch : null;
+}
 
 // ─── STATE ───────────────────────────────────────────────────────────────
 let tool        = 'pen';
@@ -576,9 +629,9 @@ function applyTheme(hex) {
   if (meta) meta.setAttribute('content', '#1a1000');
 }
 
-function themeForLevel(key) {
-  if (!key) return DEFAULT_THEME;
-  return LEVEL_THEMES[key.charAt(0)] || DEFAULT_THEME;
+function themeForLevel(levelDigit) {
+  if (!levelDigit) return DEFAULT_THEME;
+  return LEVELS[levelDigit].color;
 }
 
 // ─── CANVAS RESIZE (DPR-aware, smoothness-aware) ─────────────────────────
@@ -744,11 +797,32 @@ canvas.addEventListener('pointerleave', () => {
   canvas.style.cursor = 'crosshair';
 });
 
-// ─── LEVEL SELECT ────────────────────────────────────────────────────────
+// ─── WORKSHEET SELECT ────────────────────────────────────────────────────
+// The select picks a WORKSHEET. The level (and its theme) is derived from
+// the worksheet's filename ("3a" → level 3 → amber). User never picks a
+// level directly — the worksheet declares it.
 const levelSelect = document.getElementById('level-select');
+const levelBadge  = document.getElementById('level-badge');
+
+function setLevelBadge(levelDigit) {
+  if (!levelDigit) {
+    levelBadge.classList.remove('show');
+    levelBadge.textContent = '';
+    return;
+  }
+  levelBadge.textContent = LEVELS[levelDigit].badge;
+  // Force animation replay on each change
+  levelBadge.classList.remove('show');
+  // eslint-disable-next-line no-unused-expressions
+  levelBadge.offsetWidth;
+  levelBadge.classList.add('show');
+}
+
 levelSelect.addEventListener('change', e => {
   const key = e.target.value;
-  applyTheme(themeForLevel(key));
+  const lvl = levelFromKey(key);
+  applyTheme(themeForLevel(lvl));
+  setLevelBadge(lvl);
   if (!key) {
     bgImg.style.display = 'none';
     placeholder.style.display = 'flex';

@@ -1,4 +1,4 @@
-const CACHE = 'thai-challenge-v3';
+const CACHE = 'thai-challenge-v4';
 
 const ASSETS = [
   './',
