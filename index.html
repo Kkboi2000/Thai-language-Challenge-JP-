@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>タイ語チャレンジ</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1a1000">
@@ -12,6 +12,7 @@
 <meta name="apple-mobile-web-app-title" content="タイ語">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <style>
+  /* ─── FONTS ─────────────────────────────────────────────────────────── */
   @font-face {
     font-family: 'M PLUS Rounded 1c';
     font-style: normal;
@@ -45,142 +46,298 @@
     unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
   }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  /* ─── DESIGN TOKENS ─────────────────────────────────────────────────── */
+  :root {
+    /* Accent — interpolated by JS based on level. Default = warm amber. */
+    --accent: #f4a83a;
+    --accent-soft: rgba(244, 168, 58, 0.18);
+    --accent-glow: rgba(244, 168, 58, 0.45);
+
+    --bg-0: #150d02;
+    --bg-1: #1e1408;
+    --bg-2: #2a1d0e;
+    --bg-3: #3a2a17;
+
+    --ink-1: #ffffff;
+    --ink-2: #d4c5b0;
+    --ink-3: #8a7c68;
+    --ink-4: #574a3a;
+
+    --line: rgba(255, 255, 255, 0.08);
+    --line-strong: rgba(255, 255, 255, 0.14);
+
+    --radius: 10px;
+    --radius-sm: 8px;
+
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --t-fast: 140ms;
+    --t-med: 280ms;
+    --t-slow: 520ms;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
 
   body {
     font-family: 'M PLUS Rounded 1c', sans-serif;
-    background: #1a1000;
-    color: #fff;
-    height: 100vh;
+    background: var(--bg-0);
+    color: var(--ink-1);
     display: flex;
     flex-direction: column;
-    overflow: hidden;
     user-select: none;
+    -webkit-user-select: none;
+    transition: background var(--t-slow) var(--ease);
+    /* iOS safe-area */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
-  /* ── TOP BAR ── */
+  /* ─── TOP BAR ───────────────────────────────────────────────────────── */
   #topbar {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 7px 14px;
-    background: #111;
-    border-bottom: 2px solid #333;
+    gap: 12px;
+    padding: 9px 14px;
+    background: var(--bg-1);
+    border-bottom: 1px solid var(--line);
     flex-shrink: 0;
     z-index: 20;
+    position: relative;
+  }
+
+  /* Glowing accent line under topbar */
+  #topbar::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: -1px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0.55;
+    transition: background var(--t-slow) var(--ease);
   }
 
   #topbar h1 {
-    font-size: 0.9rem;
+    font-size: 0.92rem;
     font-weight: 900;
-    color: #f4a83a;
+    color: var(--accent);
     white-space: nowrap;
     letter-spacing: 0.04em;
+    transition: color var(--t-slow) var(--ease), text-shadow var(--t-slow) var(--ease);
+    text-shadow: 0 0 18px var(--accent-glow);
   }
 
-  .vsep { width: 1px; height: 26px; background: #444; flex-shrink: 0; }
+  .vsep {
+    width: 1px; height: 24px;
+    background: var(--line-strong);
+    flex-shrink: 0;
+  }
 
   #level-select {
     font-family: inherit;
-    font-size: 0.82rem;
+    font-size: 0.85rem;
     font-weight: 700;
-    background: #222;
-    color: #fff;
-    border: 1.5px solid #f4a83a;
-    border-radius: 8px;
-    padding: 4px 10px;
+    background: var(--bg-2);
+    color: var(--ink-1);
+    border: 1.5px solid var(--accent);
+    border-radius: var(--radius-sm);
+    padding: 5px 11px;
     cursor: pointer;
     outline: none;
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 280px;
+    transition: border-color var(--t-slow) var(--ease), box-shadow var(--t-fast) var(--ease);
   }
-  #level-select option, #level-select optgroup { background: #1a1000; }
+  #level-select:focus { box-shadow: 0 0 0 3px var(--accent-soft); }
+  #level-select option, #level-select optgroup { background: var(--bg-0); }
 
-  /* ── TOOL BAR ── */
+  /* ─── TOOL BAR ──────────────────────────────────────────────────────── */
   #toolbar {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 6px 14px;
-    background: #1e1408;
-    border-bottom: 1.5px solid #333;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--bg-1);
+    border-bottom: 1px solid var(--line);
     flex-shrink: 0;
-    flex-wrap: wrap;
     z-index: 19;
+    position: relative;
   }
 
-  .tool-label {
-    font-size: 0.68rem;
-    font-weight: 700;
-    color: #888;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    white-space: nowrap;
-  }
-
-  .tool-group { display: flex; align-items: center; gap: 7px; }
-
-  /* Tool buttons */
-  .tool-btn {
-    height: 34px;
-    padding: 0 12px;
-    border-radius: 8px;
-    border: 2px solid #444;
-    background: #2a2010;
-    color: #ccc;
-    cursor: pointer;
-    font-family: inherit;
-    font-size: 0.82rem;
-    font-weight: 700;
+  /* Left group (actions) — always fits, never shrinks */
+  .group-left {
     display: flex;
     align-items: center;
-    gap: 5px;
-    transition: all 0.12s;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  /* Spacer pushes right group to the edge */
+  .group-spacer { flex: 1 1 auto; min-width: 6px; }
+
+  /* Right group: colors + pen/eraser */
+  .group-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    min-width: 0;
+  }
+
+  /* ─── TOOL BUTTONS ──────────────────────────────────────────────────── */
+  .tool-btn {
+    height: 38px;
+    padding: 0 13px;
+    border-radius: var(--radius);
+    border: 1.5px solid var(--line-strong);
+    background: var(--bg-2);
+    color: var(--ink-2);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.86rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     white-space: nowrap;
     flex-shrink: 0;
+    transition:
+      background var(--t-fast) var(--ease),
+      border-color var(--t-fast) var(--ease),
+      color var(--t-fast) var(--ease),
+      transform var(--t-fast) var(--ease),
+      box-shadow var(--t-fast) var(--ease);
+    position: relative;
   }
-  .tool-btn:hover { border-color: #f4a83a; color: #f4a83a; }
-  .tool-btn.active {
-    background: #e85d26;
-    border-color: #e85d26;
+  .tool-btn:hover {
+    border-color: var(--accent);
+    color: var(--ink-1);
+    background: var(--bg-3);
+  }
+  .tool-btn:active { transform: scale(0.96); }
+
+  /* Pen — when active, glows in accent */
+  #btn-pen.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #1a0e00;
+    box-shadow: 0 4px 16px var(--accent-glow), 0 0 0 1px var(--accent) inset;
+  }
+  /* Eraser — distinct neutral active style so it never competes with accent */
+  #btn-eraser.active {
+    background: #4a4a4a;
+    border-color: #8a8a8a;
     color: #fff;
-    box-shadow: 0 2px 10px rgba(232,93,38,0.45);
-  }
-  .tool-btn.active.eraser-active {
-    background: #444;
-    border-color: #888;
-    box-shadow: none;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1) inset;
   }
 
-  /* Color swatches */
-  #color-swatches { display: flex; gap: 5px; align-items: center; }
+  .tool-btn .hint {
+    font-size: 0.68rem;
+    opacity: 0.65;
+    font-weight: 700;
+  }
+
+  /* Action buttons (undo/clear) — slightly more compact icons */
+  #undo-btn, #clear-btn {
+    padding: 0 11px;
+    font-size: 0.95rem;
+  }
+  #clear-btn:hover { border-color: #d04d2a; color: #ff8a6a; }
+
+  /* ─── COLOR SWATCHES ────────────────────────────────────────────────── */
+  #color-swatches {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    padding: 4px 6px;
+    background: var(--bg-0);
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+  }
 
   .swatch {
-    width: 24px; height: 24px;
+    width: 26px; height: 26px;
     border-radius: 50%;
     cursor: pointer;
-    border: 2.5px solid transparent;
-    transition: transform 0.12s, border-color 0.12s;
+    border: 2px solid transparent;
+    transition: transform var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
     flex-shrink: 0;
+    position: relative;
   }
-  .swatch:hover { transform: scale(1.2); }
-  .swatch.active { border-color: #fff; transform: scale(1.18); box-shadow: 0 0 0 1px #000; }
+  .swatch::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.08);
+    pointer-events: none;
+  }
+  .swatch:hover { transform: scale(1.18); }
+  .swatch.active {
+    border-color: #fff;
+    transform: scale(1.18);
+    box-shadow: 0 0 0 1.5px rgba(0,0,0,0.6), 0 4px 10px rgba(0,0,0,0.4);
+  }
 
   #custom-color {
-    width: 24px; height: 24px;
+    width: 26px; height: 26px;
     border-radius: 50%;
-    border: 2.5px solid #666;
+    border: 2px dashed var(--ink-4);
     cursor: pointer;
     padding: 0;
-    background: none;
+    background: transparent;
     flex-shrink: 0;
+    transition: border-color var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
+  }
+  #custom-color:hover { border-color: var(--accent); transform: scale(1.1); }
+  /* hide the native color-input internals */
+  #custom-color::-webkit-color-swatch-wrapper { padding: 0; }
+  #custom-color::-webkit-color-swatch { border: none; border-radius: 50%; }
+  #custom-color::-moz-color-swatch { border: none; border-radius: 50%; }
+
+  /* ─── RESPONSIVE — TABLET ───────────────────────────────────────────── */
+  @media (max-width: 720px) {
+    #topbar { padding: 8px 12px; gap: 10px; }
+    .tool-btn .hint { display: none; }
+    #toolbar { padding: 7px 10px; gap: 6px; }
   }
 
-  /* Action buttons */
-  #undo-btn, #clear-btn {
-    font-size: 0.95rem;
-    padding: 0 10px;
+  /* ─── RESPONSIVE — PHONE ────────────────────────────────────────────── */
+  @media (max-width: 480px) {
+    #topbar { padding: 8px 10px; gap: 8px; }
+    #topbar h1 { font-size: 0.82rem; }
+
+    #toolbar { padding: 7px 5px; gap: 4px; }
+    .group-left, .group-right { gap: 4px; }
+    .tool-btn { height: 36px; padding: 0 9px; font-size: 0.8rem; }
+    /* On phone, pen/eraser shrink to icon-only buttons */
+    #btn-pen .label, #btn-eraser .label { display: none; }
+    #btn-pen, #btn-eraser { padding: 0 9px; font-size: 1rem; }
+
+    /* Drop the secondary swatches — yellow/purple/red reachable via custom picker */
+    .swatch-extra { display: none; }
+
+    .swatch, #custom-color { width: 22px; height: 22px; }
+    #color-swatches { padding: 3px 4px; gap: 3px; }
+
+    /* Action buttons on the left stay text-only — they're the priority */
+    #undo-btn, #clear-btn { padding: 0 8px; font-size: 0.85rem; }
   }
 
-  /* ── CANVAS AREA ── */
+  /* ─── RESPONSIVE — VERY NARROW ──────────────────────────────────────── */
+  @media (max-width: 380px) {
+    #topbar h1 .label-jp { display: none; }
+    .swatch, #custom-color { width: 22px; height: 22px; }
+    #color-swatches { gap: 3px; padding: 3px; }
+    .tool-btn { height: 34px; padding: 0 8px; }
+    /* Even narrower: also hide pen button (selecting a color implies pen) */
+    #btn-pen { display: none; }
+  }
+
+  /* ─── CANVAS AREA ───────────────────────────────────────────────────── */
   #canvas-wrap {
     flex: 1;
     position: relative;
@@ -188,7 +345,6 @@
     background: #fff;
   }
 
-  /* Background image — always 100% opacity, fit inside */
   #bg-img {
     position: absolute;
     inset: 0;
@@ -199,9 +355,13 @@
     pointer-events: none;
     z-index: 1;
     display: none;
+    animation: fadeIn var(--t-med) var(--ease);
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: scale(1.01); }
+    to   { opacity: 1; transform: scale(1); }
   }
 
-  /* Drawing canvas on top */
   #draw-canvas {
     position: absolute;
     inset: 0;
@@ -209,9 +369,10 @@
     width: 100%;
     height: 100%;
     touch-action: none;
+    cursor: crosshair;
   }
 
-  /* Placeholder */
+  /* ─── PLACEHOLDER ───────────────────────────────────────────────────── */
   #placeholder {
     position: absolute;
     inset: 0;
@@ -219,24 +380,60 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    color: #ccc;
-    background: #f7f3ec;
+    gap: 14px;
+    background:
+      radial-gradient(ellipse at 50% 35%, #fffaf2 0%, #f7f3ec 60%, #ede5d4 100%);
     z-index: 0;
   }
-  #placeholder .emoji { font-size: 3.5rem; }
-  #placeholder p { font-size: 1rem; font-weight: 700; color: #aaa; }
+  #placeholder .emoji {
+    font-size: 4rem;
+    filter: drop-shadow(0 6px 16px rgba(0,0,0,0.12));
+    animation: floaty 3.6s ease-in-out infinite;
+  }
+  @keyframes floaty {
+    0%, 100% { transform: translateY(0) rotate(-1deg); }
+    50%      { transform: translateY(-6px) rotate(2deg); }
+  }
+  #placeholder p {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #8a7560;
+    letter-spacing: 0.02em;
+  }
+  #placeholder .pulse {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 0 var(--accent-glow);
+    animation: pulse 1.6s var(--ease) infinite;
+    transition: background var(--t-slow) var(--ease);
+  }
+  @keyframes pulse {
+    0%   { box-shadow: 0 0 0 0 var(--accent-glow); }
+    70%  { box-shadow: 0 0 0 14px rgba(0,0,0,0); }
+    100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); }
+  }
 
-  /* Cursor preview dot */
+  /* ─── CURSOR PREVIEW ────────────────────────────────────────────────── */
   #cursor-dot {
     position: fixed;
     pointer-events: none;
     border-radius: 50%;
     transform: translate(-50%, -50%);
     z-index: 100;
-    mix-blend-mode: multiply;
-    transition: width 0.1s, height 0.1s;
+    transition: width 90ms var(--ease), height 90ms var(--ease), opacity 120ms var(--ease);
     display: none;
+    will-change: left, top;
+  }
+  #cursor-dot.pen {
+    background: transparent;
+    border: 1.5px solid currentColor;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.6) inset;
+  }
+  #cursor-dot.eraser {
+    background: rgba(180,180,180,0.18);
+    border: 1.5px solid #555;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.7) inset;
   }
 </style>
 </head>
@@ -247,10 +444,9 @@
 
 <!-- TOP BAR -->
 <div id="topbar">
-  <h1>🇹🇭 タイ語チャレンジ</h1>
+  <h1>🇹🇭 <span class="label-jp">タイ語チャレンジ</span></h1>
   <div class="vsep"></div>
-  <span class="tool-label">レベル</span>
-  <select id="level-select">
+  <select id="level-select" aria-label="レベル選択">
     <option value="">-- レベルを選んでください --</option>
     <optgroup label="★ レベル1">
       <option value="1a">チャレンジ 1a ★</option>
@@ -280,36 +476,31 @@
   </select>
 </div>
 
-<!-- TOOL BAR -->
+<!-- TOOL BAR ── LEFT: actions │ RIGHT: pen / eraser / colors ── -->
 <div id="toolbar">
 
-  <div class="tool-group">
-    <button class="tool-btn active" id="btn-pen">✏️ ペン <span style="font-size:0.7rem;opacity:0.7">(3px)</span></button>
-    <button class="tool-btn" id="btn-eraser">⌫ 消しゴム <span style="font-size:0.7rem;opacity:0.7">(80px)</span></button>
+  <!-- LEFT: undo + clear -->
+  <div class="group-left">
+    <button class="tool-btn" id="undo-btn" title="元に戻す (Ctrl+Z)" aria-label="元に戻す">↩ <span class="label">戻す</span></button>
+    <button class="tool-btn" id="clear-btn" title="全てクリア" aria-label="全てクリア">🗑 <span class="label">クリア</span></button>
   </div>
 
-  <div class="vsep"></div>
+  <div class="group-spacer"></div>
 
-  <div class="tool-group">
-    <span class="tool-label">色</span>
-    <div id="color-swatches">
-      <div class="swatch active" style="background:#e85d26" data-color="#e85d26"></div>
-      <div class="swatch" style="background:#111111" data-color="#111111"></div>
-      <div class="swatch" style="background:#1a6fc4" data-color="#1a6fc4"></div>
-      <div class="swatch" style="background:#27ae60" data-color="#27ae60"></div>
-      <div class="swatch" style="background:#f4a83a" data-color="#f4a83a"></div>
-      <div class="swatch" style="background:#9b59b6" data-color="#9b59b6"></div>
-      <div class="swatch" style="background:#e74c3c" data-color="#e74c3c"></div>
-      <div class="swatch" style="background:#fff;outline:1px solid #bbb" data-color="#ffffff"></div>
-      <input type="color" id="custom-color" value="#e85d26" title="カスタム">
+  <!-- RIGHT: pen / eraser + colors -->
+  <div class="group-right">
+    <div id="color-swatches" role="radiogroup" aria-label="色">
+      <div class="swatch active" style="background:#111111" data-color="#111111" role="radio" aria-checked="true" aria-label="黒"></div>
+      <div class="swatch" style="background:#e85d26" data-color="#e85d26" role="radio" aria-label="オレンジ"></div>
+      <div class="swatch" style="background:#1a6fc4" data-color="#1a6fc4" role="radio" aria-label="青"></div>
+      <div class="swatch" style="background:#27ae60" data-color="#27ae60" role="radio" aria-label="緑"></div>
+      <div class="swatch swatch-extra" style="background:#f4a83a" data-color="#f4a83a" role="radio" aria-label="黄"></div>
+      <div class="swatch swatch-extra" style="background:#9b59b6" data-color="#9b59b6" role="radio" aria-label="紫"></div>
+      <div class="swatch swatch-extra" style="background:#e74c3c" data-color="#e74c3c" role="radio" aria-label="赤"></div>
+      <input type="color" id="custom-color" value="#111111" title="カスタム色" aria-label="カスタム色">
     </div>
-  </div>
-
-  <div class="vsep"></div>
-
-  <div class="tool-group">
-    <button class="tool-btn" id="undo-btn" title="元に戻す (Ctrl+Z)">↩ 戻す</button>
-    <button class="tool-btn" id="clear-btn" title="全てクリア">🗑 クリア</button>
+    <button class="tool-btn active" id="btn-pen" aria-pressed="true">✏️ <span class="label">ペン</span> <span class="hint">3px</span></button>
+    <button class="tool-btn" id="btn-eraser" aria-pressed="false">⌫ <span class="label">消しゴム</span> <span class="hint">80px</span></button>
   </div>
 
 </div>
@@ -319,50 +510,109 @@
   <div id="placeholder">
     <div class="emoji">🇹🇭</div>
     <p>レベルを選んで練習スタート！</p>
+    <div class="pulse"></div>
   </div>
   <img id="bg-img" alt="worksheet background" draggable="false">
   <canvas id="draw-canvas"></canvas>
 </div>
 
 <script>
-// ── ELEMENTS ──────────────────────────────────────────────────────────────
+'use strict';
+
+// ─── ELEMENTS ────────────────────────────────────────────────────────────
 const canvas      = document.getElementById('draw-canvas');
-const ctx         = canvas.getContext('2d');
+const ctx         = canvas.getContext('2d', { alpha: true, desynchronized: true });
 const wrap        = document.getElementById('canvas-wrap');
 const bgImg       = document.getElementById('bg-img');
 const placeholder = document.getElementById('placeholder');
 const cursorDot   = document.getElementById('cursor-dot');
+const root        = document.documentElement;
 
-// ── CONSTANTS ─────────────────────────────────────────────────────────────
-const PEN_SIZE    = 3;
-const ERASER_SIZE = 80;
+// ─── CONSTANTS ───────────────────────────────────────────────────────────
+const PEN_SIZE       = 3;
+const ERASER_SIZE    = 80;
+const UNDO_LIMIT     = 40;
+const DEFAULT_COLOR  = '#111111';   // black-ish — easier on the eye than pure #000
 
-// ── STATE ─────────────────────────────────────────────────────────────────
-let tool      = 'pen';
-let color     = '#e85d26';
-let isDrawing = false;
+/**
+ * Theme palette — one anchor color per level.
+ * Level 1 = green (fresh) → 5 = red (intense). Levels in between interpolate
+ * through nature → harvest → heat. This is the heartbeat of the UI:
+ * topbar glow, level select border, pen-active button, focus rings.
+ */
+const LEVEL_THEMES = {
+  '1': '#27ae60', // green
+  '2': '#82c91e', // lime
+  '3': '#f4a83a', // amber (the original brand orange)
+  '4': '#ef7c1c', // deep orange
+  '5': '#e23b2b', // red
+};
+const DEFAULT_THEME = '#f4a83a';
+
+// ─── STATE ───────────────────────────────────────────────────────────────
+let tool        = 'pen';
+let color       = DEFAULT_COLOR;
+let isDrawing   = false;
+let activePid   = null;          // pointer id (palm rejection: only follow one)
 let lastX = 0, lastY = 0;
-let undoStack = [];
+let midX  = 0, midY  = 0;        // midpoint cache for quadratic smoothing
+let undoStack   = [];
+let dpr         = 1;             // device pixel ratio (locked at draw time)
 
-// ── RESIZE CANVAS ─────────────────────────────────────────────────────────
+// ─── THEMING ─────────────────────────────────────────────────────────────
+/** hex(#rrggbb) → rgba(r,g,b,a) */
+function hexToRgba(hex, a) {
+  const h = hex.replace('#', '');
+  const n = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
+}
+
+function applyTheme(hex) {
+  root.style.setProperty('--accent', hex);
+  root.style.setProperty('--accent-soft', hexToRgba(hex, 0.18));
+  root.style.setProperty('--accent-glow', hexToRgba(hex, 0.45));
+  // Sync the PWA theme-color too (subtle, but nice for the address bar)
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', '#1a1000');
+}
+
+function themeForLevel(key) {
+  if (!key) return DEFAULT_THEME;
+  return LEVEL_THEMES[key.charAt(0)] || DEFAULT_THEME;
+}
+
+// ─── CANVAS RESIZE (DPR-aware, smoothness-aware) ─────────────────────────
 function resizeCanvas() {
-  const prev = canvas.toDataURL();
-  canvas.width  = wrap.clientWidth;
-  canvas.height = wrap.clientHeight;
-  // Restore drawing
-  const img = new Image();
-  img.src = prev;
-  img.onload = () => ctx.drawImage(img, 0, 0);
+  // Snapshot current drawing if any
+  const hasContent = canvas.width > 0 && canvas.height > 0;
+  const snapshot = hasContent ? canvas.toDataURL() : null;
+
+  dpr = Math.min(window.devicePixelRatio || 1, 2.5); // cap to avoid huge canvas on very high-DPI
+  const cssW = wrap.clientWidth;
+  const cssH = wrap.clientHeight;
+
+  canvas.width  = Math.floor(cssW * dpr);
+  canvas.height = Math.floor(cssH * dpr);
+  canvas.style.width  = cssW + 'px';
+  canvas.style.height = cssH + 'px';
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.lineCap  = 'round';
+  ctx.lineJoin = 'round';
+
+  if (snapshot) {
+    const img = new Image();
+    img.onload = () => ctx.drawImage(img, 0, 0, cssW, cssH);
+    img.src = snapshot;
+  }
 }
 window.addEventListener('resize', resizeCanvas);
+window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 60));
 resizeCanvas();
 
-// ── DRAWING HELPERS ───────────────────────────────────────────────────────
+// ─── DRAWING ─────────────────────────────────────────────────────────────
 function getPos(e) {
   const r = canvas.getBoundingClientRect();
-  if (e.touches && e.touches.length) {
-    return { x: e.touches[0].clientX - r.left, y: e.touches[0].clientY - r.top };
-  }
   return { x: e.clientX - r.left, y: e.clientY - r.top };
 }
 
@@ -372,164 +622,229 @@ function currentSize() {
 
 function saveUndo() {
   undoStack.push(canvas.toDataURL());
-  if (undoStack.length > 40) undoStack.shift();
+  if (undoStack.length > UNDO_LIMIT) undoStack.shift();
 }
 
-// ── DRAW EVENTS ───────────────────────────────────────────────────────────
-canvas.addEventListener('mousedown', onStart);
-canvas.addEventListener('touchstart', e => { e.preventDefault(); onStart(e); }, { passive: false });
-canvas.addEventListener('mousemove', onMove);
-canvas.addEventListener('touchmove', e => { e.preventDefault(); onMove(e); }, { passive: false });
-canvas.addEventListener('mouseup', onStop);
-canvas.addEventListener('touchend', onStop);
-canvas.addEventListener('mouseleave', onStop);
+function configureStroke() {
+  if (tool === 'eraser') {
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.strokeStyle = '#000';   // any opaque color works for erase
+    ctx.fillStyle   = '#000';
+  } else {
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.strokeStyle = color;
+    ctx.fillStyle   = color;
+  }
+  ctx.lineWidth = currentSize();
+  ctx.lineCap   = 'round';
+  ctx.lineJoin  = 'round';
+}
 
-function onStart(e) {
+function pointerDown(e) {
+  // Pen / mouse / first touch only — ignore extra fingers (palm rejection)
+  if (activePid !== null) return;
+  if (e.pointerType === 'touch' && e.isPrimary === false) return;
+
+  activePid = e.pointerId;
+  canvas.setPointerCapture && canvas.setPointerCapture(e.pointerId);
+
   saveUndo();
   isDrawing = true;
   const { x, y } = getPos(e);
   lastX = x; lastY = y;
-  // Draw a dot
+  midX  = x; midY  = y;
+
+  configureStroke();
+  // Drop a dot so a tap leaves a mark
   ctx.beginPath();
-  const s = currentSize();
-  if (tool === 'eraser') {
-    ctx.globalCompositeOperation = 'destination-out';
-    ctx.arc(x, y, s / 2, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(0,0,0,1)';
-  } else {
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.arc(x, y, s / 2, 0, Math.PI * 2);
-    ctx.fillStyle = color;
-  }
+  ctx.arc(x, y, currentSize() / 2, 0, Math.PI * 2);
   ctx.fill();
   ctx.globalCompositeOperation = 'source-over';
 }
 
-function onMove(e) {
-  // Update cursor dot
-  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+function pointerMove(e) {
+  // Always update cursor preview (even when not drawing)
+  updateCursor(e.clientX, e.clientY);
+
+  if (!isDrawing || e.pointerId !== activePid) return;
+
+  // Use coalesced events for buttery-smooth strokes when supported
+  const events = (typeof e.getCoalescedEvents === 'function') ? e.getCoalescedEvents() : null;
+  const points = (events && events.length) ? events : [e];
+
+  configureStroke();
+  for (const ev of points) {
+    const { x, y } = getPos(ev);
+    // Quadratic curve through midpoints — far smoother than lineTo
+    const newMidX = (lastX + x) / 2;
+    const newMidY = (lastY + y) / 2;
+    ctx.beginPath();
+    ctx.moveTo(midX, midY);
+    ctx.quadraticCurveTo(lastX, lastY, newMidX, newMidY);
+    ctx.stroke();
+    midX = newMidX; midY = newMidY;
+    lastX = x;     lastY = y;
+  }
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+function pointerUp(e) {
+  if (e.pointerId !== activePid) return;
+  // Final stroke from last midpoint to current point so we don't lose the tail
+  if (isDrawing) {
+    configureStroke();
+    ctx.beginPath();
+    ctx.moveTo(midX, midY);
+    ctx.lineTo(lastX, lastY);
+    ctx.stroke();
+    ctx.globalCompositeOperation = 'source-over';
+  }
+  isDrawing = false;
+  activePid = null;
+  try { canvas.releasePointerCapture && canvas.releasePointerCapture(e.pointerId); } catch (_) {}
+}
+
+// Pointer Events — single unified path for mouse, touch, stylus
+canvas.addEventListener('pointerdown',   pointerDown);
+canvas.addEventListener('pointermove',   pointerMove);
+canvas.addEventListener('pointerup',     pointerUp);
+canvas.addEventListener('pointercancel', pointerUp);
+canvas.addEventListener('pointerleave',  e => { /* do not stop — leaving the canvas mid-stroke shouldn't truncate */ });
+
+// Block native gestures and context menu inside the canvas
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+canvas.addEventListener('gesturestart', e => e.preventDefault());
+
+// ─── CURSOR PREVIEW ──────────────────────────────────────────────────────
+function updateCursor(cx, cy) {
   const s = currentSize();
-  cursorDot.style.left = clientX + 'px';
-  cursorDot.style.top  = clientY + 'px';
+  cursorDot.style.left   = cx + 'px';
+  cursorDot.style.top    = cy + 'px';
   cursorDot.style.width  = s + 'px';
   cursorDot.style.height = s + 'px';
   if (tool === 'eraser') {
-    cursorDot.style.background = 'rgba(180,180,180,0.5)';
-    cursorDot.style.border = '2px solid #999';
+    cursorDot.classList.remove('pen');
+    cursorDot.classList.add('eraser');
+    cursorDot.style.color = '';
   } else {
-    cursorDot.style.background = color + '99';
-    cursorDot.style.border = '2px solid ' + color;
+    cursorDot.classList.remove('eraser');
+    cursorDot.classList.add('pen');
+    cursorDot.style.color = color;
   }
-
-  if (!isDrawing) return;
-  const { x, y } = getPos(e);
-  ctx.beginPath();
-  ctx.moveTo(lastX, lastY);
-  ctx.lineTo(x, y);
-  ctx.lineWidth = currentSize();
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  if (tool === 'eraser') {
-    ctx.globalCompositeOperation = 'destination-out';
-    ctx.strokeStyle = 'rgba(0,0,0,1)';
-  } else {
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.strokeStyle = color;
-  }
-  ctx.stroke();
-  ctx.globalCompositeOperation = 'source-over';
-  lastX = x; lastY = y;
 }
 
-function onStop() {
-  isDrawing = false;
-  ctx.globalCompositeOperation = 'source-over';
-}
+canvas.addEventListener('pointerenter', e => {
+  if (e.pointerType === 'mouse') {
+    cursorDot.style.display = 'block';
+    canvas.style.cursor = 'none';
+  }
+});
+canvas.addEventListener('pointerleave', () => {
+  cursorDot.style.display = 'none';
+  canvas.style.cursor = 'crosshair';
+});
 
-// Show/hide cursor dot
-canvas.addEventListener('mouseenter', () => { cursorDot.style.display = 'block'; canvas.style.cursor = 'none'; });
-canvas.addEventListener('mouseleave', () => { cursorDot.style.display = 'none'; canvas.style.cursor = 'default'; });
-
-// ── LEVEL SELECT ──────────────────────────────────────────────────────────
-document.getElementById('level-select').addEventListener('change', e => {
+// ─── LEVEL SELECT ────────────────────────────────────────────────────────
+const levelSelect = document.getElementById('level-select');
+levelSelect.addEventListener('change', e => {
   const key = e.target.value;
+  applyTheme(themeForLevel(key));
   if (!key) {
     bgImg.style.display = 'none';
     placeholder.style.display = 'flex';
     return;
   }
+  // Fade in the worksheet
+  bgImg.style.display = 'none';
+  // Force the fade animation to replay
+  // eslint-disable-next-line no-unused-expressions
+  bgImg.offsetHeight;
   bgImg.src = `sheets/${key}.webp`;
   bgImg.style.display = 'block';
   placeholder.style.display = 'none';
-  // Clear canvas on level change
+  // Fresh canvas for a fresh challenge
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   undoStack = [];
 });
 
-// ── TOOL BUTTONS ──────────────────────────────────────────────────────────
-document.getElementById('btn-pen').addEventListener('click', () => {
-  tool = 'pen';
-  document.getElementById('btn-pen').classList.add('active');
-  document.getElementById('btn-pen').classList.remove('eraser-active');
-  document.getElementById('btn-eraser').classList.remove('active');
-});
+// ─── TOOL BUTTONS ────────────────────────────────────────────────────────
+const btnPen    = document.getElementById('btn-pen');
+const btnEraser = document.getElementById('btn-eraser');
 
-document.getElementById('btn-eraser').addEventListener('click', () => {
-  tool = 'eraser';
-  document.getElementById('btn-eraser').classList.add('active', 'eraser-active');
-  document.getElementById('btn-pen').classList.remove('active');
-});
+function setTool(next) {
+  tool = next;
+  btnPen.classList.toggle('active', next === 'pen');
+  btnEraser.classList.toggle('active', next === 'eraser');
+  btnPen.setAttribute('aria-pressed', next === 'pen');
+  btnEraser.setAttribute('aria-pressed', next === 'eraser');
+}
 
-// ── COLOR ─────────────────────────────────────────────────────────────────
-document.querySelectorAll('.swatch').forEach(s => {
-  s.addEventListener('click', () => {
-    color = s.dataset.color;
-    document.querySelectorAll('.swatch').forEach(x => x.classList.remove('active'));
-    s.classList.add('active');
-    document.getElementById('custom-color').value = color === '#ffffff' ? '#ffffff' : color;
-    // Auto-switch to pen
-    tool = 'pen';
-    document.getElementById('btn-pen').classList.add('active');
-    document.getElementById('btn-eraser').classList.remove('active', 'eraser-active');
+btnPen.addEventListener('click', () => setTool('pen'));
+btnEraser.addEventListener('click', () => setTool('eraser'));
+
+// ─── COLOR ───────────────────────────────────────────────────────────────
+const customColor = document.getElementById('custom-color');
+
+function setColor(hex, fromSwatch) {
+  color = hex;
+  customColor.value = hex;
+  // Snap swatches' active state
+  document.querySelectorAll('.swatch').forEach(s => {
+    const match = s.dataset.color.toLowerCase() === hex.toLowerCase();
+    s.classList.toggle('active', match);
+    s.setAttribute('aria-checked', match);
   });
-});
+  // Picking a color implies "I want to draw" — auto-switch to pen
+  setTool('pen');
+}
 
-document.getElementById('custom-color').addEventListener('input', e => {
-  color = e.target.value;
-  document.querySelectorAll('.swatch').forEach(x => x.classList.remove('active'));
-  tool = 'pen';
-  document.getElementById('btn-pen').classList.add('active');
-  document.getElementById('btn-eraser').classList.remove('active', 'eraser-active');
+document.querySelectorAll('.swatch').forEach(s => {
+  s.addEventListener('click', () => setColor(s.dataset.color, true));
 });
+customColor.addEventListener('input', e => setColor(e.target.value, false));
 
-// ── UNDO / CLEAR ──────────────────────────────────────────────────────────
+// Initialize default color
+setColor(DEFAULT_COLOR, true);
+
+// ─── UNDO / CLEAR ────────────────────────────────────────────────────────
 document.getElementById('undo-btn').addEventListener('click', undo);
 document.getElementById('clear-btn').addEventListener('click', () => {
   saveUndo();
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.restore();
 });
 
 function undo() {
   if (!undoStack.length) return;
+  const data = undoStack.pop();
   const img = new Image();
-  img.src = undoStack.pop();
   img.onload = () => {
+    const cssW = wrap.clientWidth, cssH = wrap.clientHeight;
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(img, 0, 0);
+    ctx.restore();
+    ctx.drawImage(img, 0, 0, cssW, cssH);
   };
+  img.src = data;
 }
 
-// Keyboard shortcuts
+// ─── KEYBOARD SHORTCUTS ──────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); }
-  if (e.key === 'e' || e.key === 'E') { document.getElementById('btn-eraser').click(); }
-  if (e.key === 'p' || e.key === 'P') { document.getElementById('btn-pen').click(); }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); return; }
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  if (e.key === 'e' || e.key === 'E') setTool('eraser');
+  if (e.key === 'p' || e.key === 'P') setTool('pen');
 });
+
+// ─── INIT ────────────────────────────────────────────────────────────────
+applyTheme(DEFAULT_THEME);
 </script>
 
 <script>
-// Register Service Worker
+// ─── SERVICE WORKER ──────────────────────────────────────────────────────
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js')
