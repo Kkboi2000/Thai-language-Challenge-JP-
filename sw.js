@@ -25,21 +25,21 @@ const ASSETS = [
   './sheets/5b.webp',
 ];
 
-// Install — cache everything, take over immediately
+// Install — cache everything fault-tolerantly, take over immediately
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE).then(cache => cache.addAll(ASSETS))
+    caches.open(CACHE).then(async cache => {
+      // Load files one by one. If one fails, the rest still succeed.
+      for (const asset of ASSETS) {
+        try {
+          await cache.add(asset);
+        } catch (err) {
+          console.warn('Failed to cache:', asset, err);
+        }
+      }
+    })
   );
   self.skipWaiting();
-});
-
-// Activate — clean old caches and take control of open tabs
-self.addEventListener('activate', e => {
-  e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())
-  );
 });
 
 // Fetch — cache first, fallback to network
