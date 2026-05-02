@@ -50,6 +50,7 @@
     background: var(--accent-dark);
     color: #fff;
     height: 100vh;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -341,15 +342,18 @@ let undoStack = [];
 
 // ── CANVAS RESIZE ─────────────────────────────────────────────────────────
 function resizeCanvas() {
-  const prev = canvas.toDataURL();
-  canvas.width  = wrap.clientWidth;
-  canvas.height = wrap.clientHeight;
-  const img = new Image();
-  img.src = prev;
-  img.onload = () => ctx.drawImage(img, 0, 0);
+  // Save drawing pixels
+  const w = wrap.clientWidth;
+  const h = wrap.clientHeight;
+  if (w === 0 || h === 0) return;
+  const prev = ctx.getImageData(0, 0, canvas.width || 1, canvas.height || 1);
+  canvas.width  = w;
+  canvas.height = h;
+  ctx.putImageData(prev, 0, 0);
 }
 window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
+// Delay initial resize until layout is settled
+requestAnimationFrame(() => requestAnimationFrame(resizeCanvas));
 
 // ── DRAWING ───────────────────────────────────────────────────────────────
 function getPos(e) {
@@ -362,8 +366,10 @@ function getPos(e) {
 function currentSize() { return tool === 'eraser' ? ERASER_SIZE : PEN_SIZE; }
 
 function saveUndo() {
-  undoStack.push(canvas.toDataURL());
-  if (undoStack.length > 40) undoStack.shift();
+  try {
+    undoStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+    if (undoStack.length > 40) undoStack.shift();
+  } catch(e) {}
 }
 
 canvas.addEventListener('mousedown', onStart);
@@ -426,10 +432,17 @@ canvas.addEventListener('mouseleave', () => { cursorDot.style.display = 'none'; 
 // ── LEVEL ─────────────────────────────────────────────────────────────────
 document.getElementById('level-select').addEventListener('change', e => {
   const key = e.target.value;
-  if (!key) { bgImg.style.display = 'none'; placeholder.style.display = 'flex'; applyTheme(DEFAULT_THEME); return; }
-  bgImg.src = `sheets/${key}.webp`;
-  bgImg.style.display = 'block';
+  if (!key) {
+    bgImg.style.display = 'none';
+    placeholder.style.display = 'flex';
+    applyTheme(DEFAULT_THEME);
+    return;
+  }
   placeholder.style.display = 'none';
+  bgImg.style.display = 'none'; // hide until loaded
+  bgImg.onload = () => { bgImg.style.display = 'block'; };
+  bgImg.onerror = () => { console.error('Failed to load:', bgImg.src); };
+  bgImg.src = `sheets/${key}.webp`;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   undoStack = [];
   applyTheme(THEMES[key] || DEFAULT_THEME);
@@ -471,9 +484,8 @@ document.getElementById('clear-btn').addEventListener('click', () => { saveUndo(
 
 function undo() {
   if (!undoStack.length) return;
-  const img = new Image();
-  img.src = undoStack.pop();
-  img.onload = () => { ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.drawImage(img, 0, 0); };
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.putImageData(undoStack.pop(), 0, 0);
 }
 
 document.addEventListener('keydown', e => {
