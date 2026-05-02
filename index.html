@@ -2,1025 +2,491 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>タイ語チャレンジ</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1a1000">
+<meta name="theme-color" content="#1a8c3a" id="theme-meta">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="タイ語">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <style>
-  /* ─── FONTS ─────────────────────────────────────────────────────────── */
   @font-face {
     font-family: 'M PLUS Rounded 1c';
-    font-style: normal;
-    font-weight: 700;
-    font-display: swap;
+    font-style: normal; font-weight: 700; font-display: swap;
     src: url('fonts/mplus-japanese-700.woff2') format('woff2');
     unicode-range: U+3000-9FFF, U+F900-FAFF, U+FF00-FFEF;
   }
   @font-face {
     font-family: 'M PLUS Rounded 1c';
-    font-style: normal;
-    font-weight: 700;
-    font-display: swap;
+    font-style: normal; font-weight: 700; font-display: swap;
     src: url('fonts/mplus-latin-700.woff2') format('woff2');
     unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
   }
   @font-face {
     font-family: 'M PLUS Rounded 1c';
-    font-style: normal;
-    font-weight: 900;
-    font-display: swap;
+    font-style: normal; font-weight: 900; font-display: swap;
     src: url('fonts/mplus-japanese-900.woff2') format('woff2');
     unicode-range: U+3000-9FFF, U+F900-FAFF, U+FF00-FFEF;
   }
   @font-face {
     font-family: 'M PLUS Rounded 1c';
-    font-style: normal;
-    font-weight: 900;
-    font-display: swap;
+    font-style: normal; font-weight: 900; font-display: swap;
     src: url('fonts/mplus-latin-900.woff2') format('woff2');
     unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
   }
 
-  /* ─── DESIGN TOKENS ─────────────────────────────────────────────────── */
   :root {
-    /* Accent — interpolated by JS based on level. Default = warm amber. */
-    --accent: #f4a83a;
-    --accent-soft: rgba(244, 168, 58, 0.18);
-    --accent-glow: rgba(244, 168, 58, 0.45);
-
-    --bg-0: #150d02;
-    --bg-1: #1e1408;
-    --bg-2: #2a1d0e;
-    --bg-3: #3a2a17;
-
-    --ink-1: #ffffff;
-    --ink-2: #d4c5b0;
-    --ink-3: #8a7c68;
-    --ink-4: #574a3a;
-
-    --line: rgba(255, 255, 255, 0.08);
-    --line-strong: rgba(255, 255, 255, 0.14);
-
-    --radius: 10px;
-    --radius-sm: 8px;
-
-    --ease: cubic-bezier(0.22, 1, 0.36, 1);
-    --t-fast: 140ms;
-    --t-med: 280ms;
-    --t-slow: 520ms;
+    --accent:      #1a8c3a;
+    --accent-dark: #0f4d20;
+    --accent-glow: rgba(26,140,58,0.4);
   }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-  html, body {
-    /*
-     * Modern viewport unit handles Android Chrome's collapsing address bar
-     * and iOS Safari's UI chrome correctly; falls back to 100% / 100vh on
-     * older browsers. Without this, on some phones body comes up short and
-     * a strip of dark page background shows through under the canvas area.
-     */
-    height: 100%;
-    height: 100dvh;
-    overflow: hidden;
-    /* Belt-and-suspenders: if anything ever leaks past, it's white below the
-       toolbar, never page-dark. */
-    background: #fff;
-  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
     font-family: 'M PLUS Rounded 1c', sans-serif;
-    background: var(--bg-0);
-    color: var(--ink-1);
+    background: var(--accent-dark);
+    color: #fff;
+    height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
     user-select: none;
-    -webkit-user-select: none;
-    transition: background var(--t-slow) var(--ease);
-    /* iOS safe-area for PWA mode */
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-    /* Block double-tap zoom and accidental page scroll while drawing */
-    touch-action: manipulation;
-    overscroll-behavior: none;
+    transition: background 0.4s;
   }
 
-  /* ─── TOP BAR ───────────────────────────────────────────────────────── */
+  /* ── TOP BAR ── */
   #topbar {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 9px 14px;
-    background: var(--bg-1);
-    border-bottom: 1px solid var(--line);
+    gap: 10px;
+    padding: 8px 14px;
+    background: #0a0a0a;
+    border-bottom: 2.5px solid var(--accent);
     flex-shrink: 0;
     z-index: 20;
-    position: relative;
-    /* Allow wrap rather than clip if the badge + select + title can't fit */
-    flex-wrap: wrap;
-    row-gap: 6px;
-    max-width: 100vw;
-  }
-
-  /* Glowing accent line under topbar */
-  #topbar::after {
-    content: '';
-    position: absolute;
-    left: 0; right: 0; bottom: -1px;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--accent), transparent);
-    opacity: 0.55;
-    transition: background var(--t-slow) var(--ease);
+    transition: border-color 0.4s;
   }
 
   #topbar h1 {
-    font-size: 0.92rem;
+    font-size: 0.88rem;
     font-weight: 900;
-    color: var(--accent);
+    color: #fff;
     white-space: nowrap;
     letter-spacing: 0.04em;
-    transition: color var(--t-slow) var(--ease), text-shadow var(--t-slow) var(--ease);
-    text-shadow: 0 0 18px var(--accent-glow);
-  }
-
-  .vsep {
-    width: 1px; height: 24px;
-    background: var(--line-strong);
     flex-shrink: 0;
   }
+
+  .vsep { width: 1px; height: 26px; background: #333; flex-shrink: 0; }
 
   #level-select {
     font-family: inherit;
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     font-weight: 700;
-    background: var(--bg-2);
-    color: var(--ink-1);
-    border: 1.5px solid var(--accent);
-    border-radius: var(--radius-sm);
-    padding: 5px 11px;
+    background: #1a1a1a;
+    color: #fff;
+    border: 2px solid var(--accent);
+    border-radius: 8px;
+    padding: 5px 10px;
     cursor: pointer;
     outline: none;
-    flex: 1 1 auto;
-    min-width: 0;
-    max-width: 280px;
-    transition: border-color var(--t-slow) var(--ease), box-shadow var(--t-fast) var(--ease);
+    flex: 1;
+    max-width: 260px;
+    transition: border-color 0.4s, box-shadow 0.4s;
   }
-  #level-select:focus { box-shadow: 0 0 0 3px var(--accent-soft); }
-  #level-select option, #level-select optgroup { background: var(--bg-0); }
+  #level-select:focus { box-shadow: 0 0 0 3px var(--accent-glow); }
+  #level-select option, #level-select optgroup { background: #111; }
 
-  /*
-   * Level badge — derived from the loaded worksheet's filename (1a→★, 4b→😮, etc).
-   * The user never sets this directly; it surfaces what the worksheet already says.
-   * Hidden when no worksheet is loaded so it doesn't suggest a level out of context.
-   */
-  #level-badge {
-    display: none;
-    align-items: center;
-    justify-content: center;
-    height: 28px;
-    min-width: 28px;
-    padding: 0 9px;
-    border-radius: 14px;
-    background: var(--accent-soft);
-    color: var(--accent);
-    border: 1.5px solid var(--accent);
-    font-size: 0.78rem;
-    font-weight: 900;
-    letter-spacing: 0.04em;
-    white-space: nowrap;
-    flex-shrink: 0;
-    transition:
-      background var(--t-slow) var(--ease),
-      border-color var(--t-slow) var(--ease),
-      color var(--t-slow) var(--ease),
-      transform var(--t-med) var(--ease),
-      opacity var(--t-med) var(--ease);
-    box-shadow: 0 0 12px var(--accent-soft);
-  }
-  #level-badge.show {
-    display: inline-flex;
-    animation: badgePop var(--t-med) var(--ease);
-  }
-  @keyframes badgePop {
-    0%   { transform: scale(0.6); opacity: 0; }
-    60%  { transform: scale(1.12); opacity: 1; }
-    100% { transform: scale(1); opacity: 1; }
-  }
-
-  /* ─── TOOL BAR ──────────────────────────────────────────────────────── */
+  /* ── TOOL BAR ── */
   #toolbar {
     display: flex;
     align-items: center;
+    padding: 7px 12px;
+    background: #111;
+    border-bottom: 1.5px solid #222;
+    flex-shrink: 0;
     gap: 8px;
-    padding: 8px 12px;
-    background: var(--bg-1);
-    border-bottom: 1px solid var(--line);
-    flex-shrink: 0;
     z-index: 19;
-    position: relative;
-    /*
-     * Safety net: if media queries don't engage on some unusual device
-     * (Android in "Desktop site" mode, weird zoom levels), wrap to a second
-     * row instead of clipping controls off-screen. Reaching every control
-     * matters more than visual purity.
-     */
-    flex-wrap: wrap;
-    row-gap: 6px;
-    max-width: 100vw;
   }
 
-  /*
-   * Layout: [left actions] [flex spacer] [right tools]
-   * Both groups are flex-shrink:0 — they keep their intrinsic size. The
-   * spacer absorbs the slack on wide screens; on narrow screens the right
-   * group wraps to a new row beneath the left group.
-   */
-  .group-left {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-shrink: 0;
-  }
-  .group-spacer { flex: 1 1 auto; min-width: 4px; }
+  #toolbar-left  { display: flex; align-items: center; gap: 6px; flex: 1; }
+  #toolbar-center { display: flex; align-items: center; gap: 5px; flex: 2; justify-content: center; }
+  #toolbar-right { display: flex; align-items: center; gap: 6px; flex: 1; justify-content: flex-end; }
 
-  .group-right {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-shrink: 0;
-    min-width: 0;
-  }
-
-  /* ─── TOOL BUTTONS ──────────────────────────────────────────────────── */
   .tool-btn {
-    height: 38px;
-    padding: 0 13px;
-    border-radius: var(--radius);
-    border: 1.5px solid var(--line-strong);
-    background: var(--bg-2);
-    color: var(--ink-2);
+    height: 36px;
+    padding: 0 11px;
+    border-radius: 9px;
+    border: 2px solid #333;
+    background: #1e1e1e;
+    color: #bbb;
     cursor: pointer;
     font-family: inherit;
-    font-size: 0.86rem;
+    font-size: 0.8rem;
     font-weight: 700;
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
+    transition: all 0.15s;
     white-space: nowrap;
     flex-shrink: 0;
-    transition:
-      background var(--t-fast) var(--ease),
-      border-color var(--t-fast) var(--ease),
-      color var(--t-fast) var(--ease),
-      transform var(--t-fast) var(--ease),
-      box-shadow var(--t-fast) var(--ease);
-    position: relative;
   }
-  .tool-btn:hover {
-    border-color: var(--accent);
-    color: var(--ink-1);
-    background: var(--bg-3);
-  }
-  .tool-btn:active { transform: scale(0.96); }
+  .tool-btn:hover { border-color: var(--accent); color: #fff; }
 
-  /* Pen — when active, glows in accent */
-  #btn-pen.active {
+  .action-btn { border-color: #2a2a2a; background: #181818; color: #777; font-size: 0.78rem; }
+  .action-btn:hover { border-color: #555; color: #ccc; background: #222; }
+
+  .tool-btn.pen-active {
     background: var(--accent);
     border-color: var(--accent);
-    color: #1a0e00;
-    box-shadow: 0 4px 16px var(--accent-glow), 0 0 0 1px var(--accent) inset;
-  }
-  /* Eraser — distinct neutral active style so it never competes with accent */
-  #btn-eraser.active {
-    background: #4a4a4a;
-    border-color: #8a8a8a;
     color: #fff;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1) inset;
+    box-shadow: 0 2px 12px var(--accent-glow);
+    transition: background 0.4s, border-color 0.4s, box-shadow 0.4s;
   }
 
-  .tool-btn .hint {
-    font-size: 0.68rem;
-    opacity: 0.65;
-    font-weight: 700;
+  .tool-btn.eraser-active {
+    background: #3a3a3a;
+    border-color: #666;
+    color: #fff;
   }
 
-  /* Action buttons (undo/clear) — slightly more compact icons */
-  #undo-btn, #clear-btn {
-    padding: 0 11px;
-    font-size: 0.95rem;
-  }
-  #clear-btn:hover { border-color: #d04d2a; color: #ff8a6a; }
-
-  /* ─── COLOR SWATCHES ────────────────────────────────────────────────── */
-  #color-swatches {
-    display: flex;
-    gap: 4px;
-    align-items: center;
-    padding: 4px 6px;
-    background: var(--bg-0);
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-  }
-
+  /* Color swatches */
   .swatch {
     width: 26px; height: 26px;
     border-radius: 50%;
     cursor: pointer;
-    border: 2px solid transparent;
-    transition: transform var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
+    border: 2.5px solid transparent;
+    transition: transform 0.12s, border-color 0.12s;
     flex-shrink: 0;
-    position: relative;
   }
-  .swatch::after {
-    content: '';
-    position: absolute;
-    inset: -2px;
-    border-radius: 50%;
-    border: 1px solid rgba(255,255,255,0.08);
-    pointer-events: none;
-  }
-  .swatch:hover { transform: scale(1.18); }
-  .swatch.active {
-    border-color: #fff;
-    transform: scale(1.18);
-    box-shadow: 0 0 0 1.5px rgba(0,0,0,0.6), 0 4px 10px rgba(0,0,0,0.4);
-  }
+  .swatch:hover { transform: scale(1.2); }
+  .swatch.active { border-color: #fff; transform: scale(1.18); box-shadow: 0 0 0 1.5px #000; }
 
   #custom-color {
     width: 26px; height: 26px;
     border-radius: 50%;
-    border: 2px dashed var(--ink-4);
+    border: 2.5px solid #555;
     cursor: pointer;
     padding: 0;
-    background: transparent;
+    background: none;
     flex-shrink: 0;
-    transition: border-color var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
-  }
-  #custom-color:hover { border-color: var(--accent); transform: scale(1.1); }
-  /* hide the native color-input internals */
-  #custom-color::-webkit-color-swatch-wrapper { padding: 0; }
-  #custom-color::-webkit-color-swatch { border: none; border-radius: 50%; }
-  #custom-color::-moz-color-swatch { border: none; border-radius: 50%; }
-
-  /*
-   * ─── RESPONSIVE STRATEGY ──────────────────────────────────────────────
-   * Single principle: anything that isn't a roomy desktop (≥820px) gets the
-   * compact UI. The previous multi-breakpoint approach + (hover:none) query
-   * was fragile — phones running "Desktop Site" mode, or with unusual zoom,
-   * could fall through every check and render the desktop layout into a
-   * 412px viewport. One firm threshold is bulletproof.
-   *
-   * Compact UI also engages on any touch-primary device, regardless of width
-   * — a stylus tablet or phone-in-landscape should never show the full chrome.
-   */
-
-  /* ─── COMPACT UI — phones, tablets, anything narrow or touch-driven ── */
-  @media (max-width: 819px), (hover: none) and (pointer: coarse) {
-    #topbar { padding: 8px 10px; gap: 8px; }
-    #topbar h1 { font-size: 0.85rem; }
-    /* Hide the JP title text on compact — flag stays as identity, worksheet itself shows the full title */
-    #topbar h1 .label-jp { display: none; }
-    /* Cap the select so the badge has room next to it without wrapping */
-    #level-select { max-width: 240px; font-size: 0.82rem; padding: 5px 9px; }
-
-    #toolbar { padding: 7px 6px; gap: 5px; }
-    .group-left, .group-right { gap: 4px; }
-    .tool-btn { height: 36px; padding: 0 9px; font-size: 0.82rem; }
-    .tool-btn .hint { display: none; }
-
-    /* Pen / eraser: icon-only — saves ~70px and keeps everything on one row */
-    #btn-pen .label, #btn-eraser .label { display: none; }
-    #btn-pen, #btn-eraser { padding: 0 9px; font-size: 1.05rem; }
-
-    /* Secondary swatches drop out — still reachable via the custom picker */
-    .swatch-extra { display: none; }
-
-    .swatch, #custom-color { width: 22px; height: 22px; }
-    #color-swatches { padding: 3px 4px; gap: 3px; }
-
-    /* Action buttons keep their text — these are the priority controls */
-    #undo-btn, #clear-btn { padding: 0 8px; font-size: 0.82rem; }
-
-    /* Hide the vertical separator on compact — gap alone is enough */
-    .vsep { display: none; }
   }
 
-  /* ─── PHONE PORTRAIT — narrow enough that pen button must drop ──────── */
-  @media (max-width: 411px) {
-    /*
-     * On most portrait phones (iPhone 12-15, Pixel, Galaxy), the pen button
-     * is the lowest-priority control: picking any color auto-switches to pen
-     * mode, so the pen button is redundant. Dropping it reclaims ~40px,
-     * which is what lets the rest of the toolbar stay on a single row.
-     * The pen pencil icon on swatches / cursor still telegraphs pen mode.
-     */
-    #btn-pen { display: none; }
-  }
-
-  /* ─── EXTRA-NARROW — sub-iPhone-mini, ancient phones ──────────────── */
-  @media (max-width: 359px) {
-    #topbar { padding: 7px 8px; gap: 6px; }
-    #level-badge { display: none !important; }   /* topbar gets too cramped */
-
-    #toolbar { padding: 6px 5px; gap: 4px; }
-    .group-left, .group-right { gap: 4px; }
-    .tool-btn { height: 34px; padding: 0 8px; font-size: 0.78rem; }
-    .swatch, #custom-color { width: 20px; height: 20px; }
-    #color-swatches { padding: 3px 4px; gap: 3px; }
-    #undo-btn, #clear-btn { padding: 0 8px; font-size: 0.78rem; }
-  }
-
-  /* ─── CANVAS AREA ───────────────────────────────────────────────────── */
+  /* ── CANVAS ── */
   #canvas-wrap {
-    flex: 1 1 auto;
+    flex: 1;
     position: relative;
     overflow: hidden;
-    /* Hard-set to white; the worksheet sits on this. !important guards
-       against any future theme-color leak. */
-    background: #ffffff !important;
-    min-height: 0;     /* allow flex item to shrink in column layout */
+    background: #fff;
   }
 
   #bg-img {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    object-position: center;
-    pointer-events: none;
-    z-index: 1;
-    display: none;
-    animation: fadeIn var(--t-med) var(--ease);
-  }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: scale(1.01); }
-    to   { opacity: 1; transform: scale(1); }
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: contain; object-position: center;
+    pointer-events: none; z-index: 1; display: none;
   }
 
   #draw-canvas {
-    position: absolute;
-    inset: 0;
-    z-index: 2;
-    width: 100%;
-    height: 100%;
+    position: absolute; inset: 0; z-index: 2;
+    width: 100%; height: 100%;
     touch-action: none;
-    cursor: crosshair;
   }
 
-  /* ─── PLACEHOLDER ───────────────────────────────────────────────────── */
   #placeholder {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 14px;
-    background:
-      radial-gradient(ellipse at 50% 35%, #fffaf2 0%, #f7f3ec 60%, #ede5d4 100%);
-    z-index: 0;
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 12px; background: #f7f4ee; z-index: 0;
   }
-  #placeholder .emoji {
-    font-size: 4rem;
-    filter: drop-shadow(0 6px 16px rgba(0,0,0,0.12));
-    animation: floaty 3.6s ease-in-out infinite;
-  }
-  @keyframes floaty {
-    0%, 100% { transform: translateY(0) rotate(-1deg); }
-    50%      { transform: translateY(-6px) rotate(2deg); }
-  }
-  #placeholder p {
-    font-size: 1rem;
-    font-weight: 700;
-    color: #8a7560;
-    letter-spacing: 0.02em;
-  }
-  #placeholder .pulse {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--accent);
-    box-shadow: 0 0 0 0 var(--accent-glow);
-    animation: pulse 1.6s var(--ease) infinite;
-    transition: background var(--t-slow) var(--ease);
-  }
-  @keyframes pulse {
-    0%   { box-shadow: 0 0 0 0 var(--accent-glow); }
-    70%  { box-shadow: 0 0 0 14px rgba(0,0,0,0); }
-    100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); }
-  }
-  /* When the worksheet image fails to load, the placeholder takes on a soft
-     warning tone instead of going silently blank/black. */
-  #placeholder.error p { color: #c44b30; }
-  #placeholder.error .pulse { display: none; }
-  #placeholder.error .emoji { animation: none; filter: grayscale(0.4); }
+  #placeholder .emoji { font-size: 3.5rem; }
+  #placeholder p { font-size: 1rem; font-weight: 700; color: #aaa; }
 
-  /* ─── CURSOR PREVIEW ────────────────────────────────────────────────── */
   #cursor-dot {
-    position: fixed;
-    pointer-events: none;
+    position: fixed; pointer-events: none;
     border-radius: 50%;
     transform: translate(-50%, -50%);
     z-index: 100;
-    transition: width 90ms var(--ease), height 90ms var(--ease), opacity 120ms var(--ease);
+    transition: width 0.08s, height 0.08s;
     display: none;
-    will-change: left, top;
-  }
-  #cursor-dot.pen {
-    background: transparent;
-    border: 1.5px solid currentColor;
-    box-shadow: 0 0 0 1px rgba(255,255,255,0.6) inset;
-  }
-  #cursor-dot.eraser {
-    background: rgba(180,180,180,0.18);
-    border: 1.5px solid #555;
-    box-shadow: 0 0 0 1px rgba(255,255,255,0.7) inset;
   }
 </style>
 </head>
 <body>
 
-<!-- CURSOR DOT -->
 <div id="cursor-dot"></div>
 
 <!-- TOP BAR -->
 <div id="topbar">
-  <h1>🇹🇭 <span class="label-jp">タイ語チャレンジ</span></h1>
+  <h1>🇹🇭 タイ語</h1>
   <div class="vsep"></div>
-  <select id="level-select" aria-label="チャレンジ選択">
-    <option value="">チャレンジを選ぶ ↓</option>
-    <optgroup label="★ かんたん">
+  <select id="level-select">
+    <option value="">-- レベルを選んでください --</option>
+    <optgroup label="★ レベル1">
       <option value="1a">チャレンジ 1a ★</option>
       <option value="1b">チャレンジ 1b ★</option>
       <option value="1c">チャレンジ 1c ★</option>
     </optgroup>
-    <optgroup label="★★ ふつう">
+    <optgroup label="★★ レベル2">
       <option value="2a">チャレンジ 2a ★★</option>
       <option value="2b">チャレンジ 2b ★★</option>
       <option value="2c">チャレンジ 2c ★★</option>
       <option value="2d">チャレンジ 2d ★★</option>
     </optgroup>
-    <optgroup label="★★★ むずかしい">
+    <optgroup label="★★★ レベル3">
       <option value="3a">チャレンジ 3a ★★★</option>
       <option value="3b">チャレンジ 3b ★★★</option>
       <option value="3c">チャレンジ 3c ★★★</option>
       <option value="3d">チャレンジ 3d ★★★</option>
     </optgroup>
-    <optgroup label="😮 むずい!">
+    <optgroup label="😮 レベル4">
       <option value="4a">チャレンジ 4a 😮</option>
       <option value="4b">チャレンジ 4b 😮</option>
     </optgroup>
-    <optgroup label="🤯 やばい!!">
+    <optgroup label="🤯 レベル5">
       <option value="5a">チャレンジ 5a 🤯</option>
       <option value="5b">チャレンジ 5b 🤯</option>
     </optgroup>
   </select>
-  <!-- Level badge — auto-derived from the loaded worksheet, lights up in accent color -->
-  <div id="level-badge" aria-live="polite"></div>
 </div>
 
-<!-- TOOL BAR ── LEFT: actions │ RIGHT: pen / eraser / colors ── -->
+<!-- TOOL BAR -->
 <div id="toolbar">
 
-  <!-- LEFT: undo + clear -->
-  <div class="group-left">
-    <button class="tool-btn" id="undo-btn" title="元に戻す (Ctrl+Z)" aria-label="元に戻す">↩ <span class="label">戻す</span></button>
-    <button class="tool-btn" id="clear-btn" title="全てクリア" aria-label="全てクリア">🗑 <span class="label">クリア</span></button>
+  <!-- LEFT: Undo + Clear -->
+  <div id="toolbar-left">
+    <button class="tool-btn action-btn" id="undo-btn">↩ 戻す</button>
+    <button class="tool-btn action-btn" id="clear-btn">🗑 クリア</button>
   </div>
 
-  <div class="group-spacer"></div>
+  <!-- CENTER: Colors -->
+  <div id="toolbar-center">
+    <div class="swatch active" style="background:#111111" data-color="#111111"></div>
+    <div class="swatch" style="background:#e74c3c" data-color="#e74c3c"></div>
+    <div class="swatch" style="background:#e85d26" data-color="#e85d26"></div>
+    <div class="swatch" style="background:#f4a83a" data-color="#f4a83a"></div>
+    <div class="swatch" style="background:#1a6fc4" data-color="#1a6fc4"></div>
+    <div class="swatch" style="background:#27ae60" data-color="#27ae60"></div>
+    <div class="swatch" style="background:#9b59b6" data-color="#9b59b6"></div>
+    <div class="swatch" style="background:#fff;outline:1.5px solid #bbb" data-color="#ffffff"></div>
+    <input type="color" id="custom-color" value="#111111" title="カスタム">
+  </div>
 
-  <!-- RIGHT: pen / eraser + colors -->
-  <div class="group-right">
-    <div id="color-swatches" role="radiogroup" aria-label="色">
-      <div class="swatch active" style="background:#111111" data-color="#111111" role="radio" aria-checked="true" aria-label="黒"></div>
-      <div class="swatch" style="background:#e85d26" data-color="#e85d26" role="radio" aria-label="オレンジ"></div>
-      <div class="swatch" style="background:#1a6fc4" data-color="#1a6fc4" role="radio" aria-label="青"></div>
-      <div class="swatch" style="background:#27ae60" data-color="#27ae60" role="radio" aria-label="緑"></div>
-      <div class="swatch swatch-extra" style="background:#f4a83a" data-color="#f4a83a" role="radio" aria-label="黄"></div>
-      <div class="swatch swatch-extra" style="background:#9b59b6" data-color="#9b59b6" role="radio" aria-label="紫"></div>
-      <div class="swatch swatch-extra" style="background:#e74c3c" data-color="#e74c3c" role="radio" aria-label="赤"></div>
-      <input type="color" id="custom-color" value="#111111" title="カスタム色" aria-label="カスタム色">
-    </div>
-    <button class="tool-btn active" id="btn-pen" aria-pressed="true">✏️ <span class="label">ペン</span> <span class="hint">3px</span></button>
-    <button class="tool-btn" id="btn-eraser" aria-pressed="false">⌫ <span class="label">消しゴム</span> <span class="hint">80px</span></button>
+  <!-- RIGHT: Pen + Eraser -->
+  <div id="toolbar-right">
+    <button class="tool-btn pen-active" id="btn-pen">✏️ ペン</button>
+    <button class="tool-btn" id="btn-eraser">⌫ 消しゴム</button>
   </div>
 
 </div>
 
-<!-- CANVAS AREA -->
+<!-- CANVAS -->
 <div id="canvas-wrap">
   <div id="placeholder">
     <div class="emoji">🇹🇭</div>
-    <p>チャレンジを選んでスタート！</p>
-    <div class="pulse"></div>
+    <p>レベルを選んで練習スタート！</p>
   </div>
-  <img id="bg-img" alt="worksheet background" draggable="false">
+  <img id="bg-img" alt="" draggable="false">
   <canvas id="draw-canvas"></canvas>
 </div>
 
 <script>
-'use strict';
+// ── THEME per level (green → yellow-green → yellow → orange → red) ────────
+const THEMES = {
+  '1a': { accent:'#1a8c3a', dark:'#0a3518', glow:'rgba(26,140,58,0.4)'  },
+  '1b': { accent:'#1a8c3a', dark:'#0a3518', glow:'rgba(26,140,58,0.4)'  },
+  '1c': { accent:'#1a8c3a', dark:'#0a3518', glow:'rgba(26,140,58,0.4)'  },
+  '2a': { accent:'#5aaa20', dark:'#253d0a', glow:'rgba(90,170,32,0.4)'  },
+  '2b': { accent:'#5aaa20', dark:'#253d0a', glow:'rgba(90,170,32,0.4)'  },
+  '2c': { accent:'#5aaa20', dark:'#253d0a', glow:'rgba(90,170,32,0.4)'  },
+  '2d': { accent:'#5aaa20', dark:'#253d0a', glow:'rgba(90,170,32,0.4)'  },
+  '3a': { accent:'#c8a800', dark:'#3d3200', glow:'rgba(200,168,0,0.4)'  },
+  '3b': { accent:'#c8a800', dark:'#3d3200', glow:'rgba(200,168,0,0.4)'  },
+  '3c': { accent:'#c8a800', dark:'#3d3200', glow:'rgba(200,168,0,0.4)'  },
+  '3d': { accent:'#c8a800', dark:'#3d3200', glow:'rgba(200,168,0,0.4)'  },
+  '4a': { accent:'#e85d26', dark:'#4a1a08', glow:'rgba(232,93,38,0.4)'  },
+  '4b': { accent:'#e85d26', dark:'#4a1a08', glow:'rgba(232,93,38,0.4)'  },
+  '5a': { accent:'#d01820', dark:'#400508', glow:'rgba(208,24,32,0.4)'  },
+  '5b': { accent:'#d01820', dark:'#400508', glow:'rgba(208,24,32,0.4)'  },
+};
+const DEFAULT_THEME = THEMES['1a'];
 
-// ─── ELEMENTS ────────────────────────────────────────────────────────────
+function applyTheme(t) {
+  const r = document.documentElement;
+  r.style.setProperty('--accent',      t.accent);
+  r.style.setProperty('--accent-dark', t.dark);
+  r.style.setProperty('--accent-glow', t.glow);
+  document.getElementById('theme-meta').setAttribute('content', t.accent);
+}
+applyTheme(DEFAULT_THEME);
+
+// ── ELEMENTS ──────────────────────────────────────────────────────────────
 const canvas      = document.getElementById('draw-canvas');
-const ctx         = canvas.getContext('2d', { alpha: true, desynchronized: true });
+const ctx         = canvas.getContext('2d');
 const wrap        = document.getElementById('canvas-wrap');
 const bgImg       = document.getElementById('bg-img');
 const placeholder = document.getElementById('placeholder');
 const cursorDot   = document.getElementById('cursor-dot');
-const root        = document.documentElement;
+const btnPen      = document.getElementById('btn-pen');
+const btnEraser   = document.getElementById('btn-eraser');
 
-// ─── CONSTANTS ───────────────────────────────────────────────────────────
-const PEN_SIZE       = 3;
-const ERASER_SIZE    = 80;
-const UNDO_LIMIT     = 40;
-const DEFAULT_COLOR  = '#111111';   // black-ish — easier on the eye than pure #000
+const PEN_SIZE    = 3;
+const ERASER_SIZE = 80;
 
-/**
- * Level definitions — single source of truth.
- * The level is DERIVED from the worksheet key (e.g. "1a" → level 1, "5b" → level 5).
- * The user never picks a level directly; they pick a worksheet, and the worksheet
- * tells the app what level it is. Each level carries:
- *   - color: drives the entire UI accent (topbar glow, pen button, focus rings…)
- *   - badge: the difficulty marker the worksheet itself shows (★, ★★, 😮, 🤯)
- * Level 1 = green (fresh growth) → 5 = red (molten heat). The two visual scales
- * (color and symbol) reinforce each other.
- */
-const LEVELS = {
-  '1': { color: '#27ae60', badge: '★' },         // green
-  '2': { color: '#82c91e', badge: '★★' },        // lime
-  '3': { color: '#f4a83a', badge: '★★★' },       // amber (original brand)
-  '4': { color: '#ef7c1c', badge: '😮' },        // deep orange
-  '5': { color: '#e23b2b', badge: '🤯' },        // red
-};
-const DEFAULT_THEME = '#f4a83a';
+let tool = 'pen', color = '#111111';
+let isDrawing = false, lastX = 0, lastY = 0;
+let undoStack = [];
 
-/** Pull the level digit from a worksheet key. "3b" → "3", "" → null. */
-function levelFromKey(key) {
-  if (!key) return null;
-  const ch = key.charAt(0);
-  return LEVELS[ch] ? ch : null;
-}
-
-// ─── STATE ───────────────────────────────────────────────────────────────
-let tool        = 'pen';
-let color       = DEFAULT_COLOR;
-let isDrawing   = false;
-let activePid   = null;          // pointer id (palm rejection: only follow one)
-let lastX = 0, lastY = 0;
-let midX  = 0, midY  = 0;        // midpoint cache for quadratic smoothing
-let undoStack   = [];
-let dpr         = 1;             // device pixel ratio (locked at draw time)
-
-// ─── THEMING ─────────────────────────────────────────────────────────────
-/** hex(#rrggbb) → rgba(r,g,b,a) */
-function hexToRgba(hex, a) {
-  const h = hex.replace('#', '');
-  const n = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16);
-  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
-}
-
-function applyTheme(hex) {
-  root.style.setProperty('--accent', hex);
-  root.style.setProperty('--accent-soft', hexToRgba(hex, 0.18));
-  root.style.setProperty('--accent-glow', hexToRgba(hex, 0.45));
-  // Sync the PWA theme-color too (subtle, but nice for the address bar)
-  const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.setAttribute('content', '#1a1000');
-}
-
-function themeForLevel(levelDigit) {
-  if (!levelDigit) return DEFAULT_THEME;
-  return LEVELS[levelDigit].color;
-}
-
-// ─── CANVAS RESIZE (DPR-aware, smoothness-aware) ─────────────────────────
+// ── CANVAS RESIZE ─────────────────────────────────────────────────────────
 function resizeCanvas() {
-  // Snapshot current drawing if any
-  const hasContent = canvas.width > 0 && canvas.height > 0;
-  const snapshot = hasContent ? canvas.toDataURL() : null;
-
-  dpr = Math.min(window.devicePixelRatio || 1, 2.5); // cap to avoid huge canvas on very high-DPI
-  const cssW = wrap.clientWidth;
-  const cssH = wrap.clientHeight;
-
-  canvas.width  = Math.floor(cssW * dpr);
-  canvas.height = Math.floor(cssH * dpr);
-  canvas.style.width  = cssW + 'px';
-  canvas.style.height = cssH + 'px';
-
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.lineCap  = 'round';
-  ctx.lineJoin = 'round';
-
-  if (snapshot) {
-    const img = new Image();
-    img.onload = () => ctx.drawImage(img, 0, 0, cssW, cssH);
-    img.src = snapshot;
-  }
+  const prev = canvas.toDataURL();
+  canvas.width  = wrap.clientWidth;
+  canvas.height = wrap.clientHeight;
+  const img = new Image();
+  img.src = prev;
+  img.onload = () => ctx.drawImage(img, 0, 0);
 }
 window.addEventListener('resize', resizeCanvas);
-window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 60));
 resizeCanvas();
 
-// ─── DRAWING ─────────────────────────────────────────────────────────────
+// ── DRAWING ───────────────────────────────────────────────────────────────
 function getPos(e) {
   const r = canvas.getBoundingClientRect();
+  if (e.touches && e.touches.length)
+    return { x: e.touches[0].clientX - r.left, y: e.touches[0].clientY - r.top };
   return { x: e.clientX - r.left, y: e.clientY - r.top };
 }
 
-function currentSize() {
-  return tool === 'eraser' ? ERASER_SIZE : PEN_SIZE;
-}
+function currentSize() { return tool === 'eraser' ? ERASER_SIZE : PEN_SIZE; }
 
 function saveUndo() {
   undoStack.push(canvas.toDataURL());
-  if (undoStack.length > UNDO_LIMIT) undoStack.shift();
+  if (undoStack.length > 40) undoStack.shift();
 }
 
-function configureStroke() {
-  if (tool === 'eraser') {
-    ctx.globalCompositeOperation = 'destination-out';
-    ctx.strokeStyle = '#000';   // any opaque color works for erase
-    ctx.fillStyle   = '#000';
-  } else {
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.strokeStyle = color;
-    ctx.fillStyle   = color;
-  }
-  ctx.lineWidth = currentSize();
-  ctx.lineCap   = 'round';
-  ctx.lineJoin  = 'round';
-}
+canvas.addEventListener('mousedown', onStart);
+canvas.addEventListener('touchstart', e => { e.preventDefault(); onStart(e); }, { passive: false });
+canvas.addEventListener('mousemove', onMove);
+canvas.addEventListener('touchmove', e => { e.preventDefault(); onMove(e); }, { passive: false });
+canvas.addEventListener('mouseup', onStop);
+canvas.addEventListener('touchend', onStop);
+canvas.addEventListener('mouseleave', onStop);
 
-function pointerDown(e) {
-  // Pen / mouse / first touch only — ignore extra fingers (palm rejection)
-  if (activePid !== null) return;
-  if (e.pointerType === 'touch' && e.isPrimary === false) return;
-
-  activePid = e.pointerId;
-  canvas.setPointerCapture && canvas.setPointerCapture(e.pointerId);
-
-  saveUndo();
-  isDrawing = true;
+function onStart(e) {
+  saveUndo(); isDrawing = true;
   const { x, y } = getPos(e);
   lastX = x; lastY = y;
-  midX  = x; midY  = y;
-
-  configureStroke();
-  // Drop a dot so a tap leaves a mark
   ctx.beginPath();
-  ctx.arc(x, y, currentSize() / 2, 0, Math.PI * 2);
+  if (tool === 'eraser') {
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.arc(x, y, ERASER_SIZE / 2, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0,0,0,1)';
+  } else {
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.arc(x, y, PEN_SIZE / 2, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+  }
   ctx.fill();
   ctx.globalCompositeOperation = 'source-over';
 }
 
-function pointerMove(e) {
-  // Always update cursor preview (even when not drawing)
-  updateCursor(e.clientX, e.clientY);
-
-  if (!isDrawing || e.pointerId !== activePid) return;
-
-  // Use coalesced events for buttery-smooth strokes when supported
-  const events = (typeof e.getCoalescedEvents === 'function') ? e.getCoalescedEvents() : null;
-  const points = (events && events.length) ? events : [e];
-
-  configureStroke();
-  for (const ev of points) {
-    const { x, y } = getPos(ev);
-    // Quadratic curve through midpoints — far smoother than lineTo
-    const newMidX = (lastX + x) / 2;
-    const newMidY = (lastY + y) / 2;
-    ctx.beginPath();
-    ctx.moveTo(midX, midY);
-    ctx.quadraticCurveTo(lastX, lastY, newMidX, newMidY);
-    ctx.stroke();
-    midX = newMidX; midY = newMidY;
-    lastX = x;     lastY = y;
-  }
-  ctx.globalCompositeOperation = 'source-over';
-}
-
-function pointerUp(e) {
-  if (e.pointerId !== activePid) return;
-  // Final stroke from last midpoint to current point so we don't lose the tail
-  if (isDrawing) {
-    configureStroke();
-    ctx.beginPath();
-    ctx.moveTo(midX, midY);
-    ctx.lineTo(lastX, lastY);
-    ctx.stroke();
-    ctx.globalCompositeOperation = 'source-over';
-  }
-  isDrawing = false;
-  activePid = null;
-  try { canvas.releasePointerCapture && canvas.releasePointerCapture(e.pointerId); } catch (_) {}
-}
-
-// Pointer Events — single unified path for mouse, touch, stylus
-canvas.addEventListener('pointerdown',   pointerDown);
-canvas.addEventListener('pointermove',   pointerMove);
-canvas.addEventListener('pointerup',     pointerUp);
-canvas.addEventListener('pointercancel', pointerUp);
-canvas.addEventListener('pointerleave',  e => { /* do not stop — leaving the canvas mid-stroke shouldn't truncate */ });
-
-// Block native gestures and context menu inside the canvas
-canvas.addEventListener('contextmenu', e => e.preventDefault());
-canvas.addEventListener('gesturestart', e => e.preventDefault());
-
-// ─── CURSOR PREVIEW ──────────────────────────────────────────────────────
-function updateCursor(cx, cy) {
+function onMove(e) {
+  const cx = e.touches ? e.touches[0].clientX : e.clientX;
+  const cy = e.touches ? e.touches[0].clientY : e.clientY;
   const s = currentSize();
-  cursorDot.style.left   = cx + 'px';
-  cursorDot.style.top    = cy + 'px';
-  cursorDot.style.width  = s + 'px';
-  cursorDot.style.height = s + 'px';
+  cursorDot.style.left = cx + 'px'; cursorDot.style.top = cy + 'px';
+  cursorDot.style.width = s + 'px'; cursorDot.style.height = s + 'px';
+  cursorDot.style.background = tool === 'eraser' ? 'rgba(180,180,180,0.4)' : color + '88';
+  cursorDot.style.border = tool === 'eraser' ? '2px solid #999' : '2px solid ' + color;
+
+  if (!isDrawing) return;
+  const { x, y } = getPos(e);
+  ctx.beginPath();
+  ctx.moveTo(lastX, lastY); ctx.lineTo(x, y);
+  ctx.lineWidth = currentSize(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
   if (tool === 'eraser') {
-    cursorDot.classList.remove('pen');
-    cursorDot.classList.add('eraser');
-    cursorDot.style.color = '';
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.strokeStyle = 'rgba(0,0,0,1)';
   } else {
-    cursorDot.classList.remove('eraser');
-    cursorDot.classList.add('pen');
-    cursorDot.style.color = color;
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.strokeStyle = color;
   }
+  ctx.stroke();
+  ctx.globalCompositeOperation = 'source-over';
+  lastX = x; lastY = y;
 }
 
-canvas.addEventListener('pointerenter', e => {
-  if (e.pointerType === 'mouse') {
-    cursorDot.style.display = 'block';
-    canvas.style.cursor = 'none';
-  }
-});
-canvas.addEventListener('pointerleave', () => {
-  cursorDot.style.display = 'none';
-  canvas.style.cursor = 'crosshair';
-});
+function onStop() { isDrawing = false; ctx.globalCompositeOperation = 'source-over'; }
 
-// ─── WORKSHEET SELECT ────────────────────────────────────────────────────
-// The select picks a WORKSHEET. The level (and its theme) is derived from
-// the worksheet's filename ("3a" → level 3 → amber). User never picks a
-// level directly — the worksheet declares it.
-const levelSelect = document.getElementById('level-select');
-const levelBadge  = document.getElementById('level-badge');
+canvas.addEventListener('mouseenter', () => { cursorDot.style.display = 'block'; canvas.style.cursor = 'none'; });
+canvas.addEventListener('mouseleave', () => { cursorDot.style.display = 'none';  canvas.style.cursor = 'default'; });
 
-function setLevelBadge(levelDigit) {
-  if (!levelDigit) {
-    levelBadge.classList.remove('show');
-    levelBadge.textContent = '';
-    return;
-  }
-  levelBadge.textContent = LEVELS[levelDigit].badge;
-  // Force animation replay on each change
-  levelBadge.classList.remove('show');
-  // eslint-disable-next-line no-unused-expressions
-  levelBadge.offsetWidth;
-  levelBadge.classList.add('show');
-}
-
-levelSelect.addEventListener('change', e => {
+// ── LEVEL ─────────────────────────────────────────────────────────────────
+document.getElementById('level-select').addEventListener('change', e => {
   const key = e.target.value;
-  const lvl = levelFromKey(key);
-  applyTheme(themeForLevel(lvl));
-  setLevelBadge(lvl);
-
-  // Fresh canvas for a fresh challenge (always)
-  ctx.save();
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.restore();
-  undoStack = [];
-
-  if (!key) {
-    bgImg.style.display = 'none';
-    bgImg.removeAttribute('src');
-    placeholder.style.display = 'flex';
-    placeholder.classList.remove('error');
-    placeholder.querySelector('p').textContent = 'チャレンジを選んでスタート！';
-    return;
-  }
-
-  /*
-   * Worksheet loading is async. Until the image is actually decoded, keep
-   * the placeholder visible — that way the screen never goes blank/black on
-   * a slow connection. Once the image is ready, swap to it. If it fails,
-   * show a clear error message instead of silent failure.
-   */
-  placeholder.style.display = 'flex';
-  placeholder.classList.remove('error');
-  placeholder.querySelector('p').textContent = '読み込み中...';
-  bgImg.style.display = 'none';
-
-  // Detach previous handlers (in case of rapid level changes)
-  bgImg.onload = null;
-  bgImg.onerror = null;
-
-  bgImg.onload = () => {
-    placeholder.style.display = 'none';
-    // Restart the fade animation
-    bgImg.style.animation = 'none';
-    // eslint-disable-next-line no-unused-expressions
-    bgImg.offsetHeight;
-    bgImg.style.animation = '';
-    bgImg.style.display = 'block';
-  };
-  bgImg.onerror = () => {
-    placeholder.classList.add('error');
-    placeholder.querySelector('p').textContent = 'シートを読み込めませんでした';
-    bgImg.style.display = 'none';
-  };
-  // Cache-bust nothing — let the SW handle caching. Just set src.
+  if (!key) { bgImg.style.display = 'none'; placeholder.style.display = 'flex'; applyTheme(DEFAULT_THEME); return; }
   bgImg.src = `sheets/${key}.webp`;
-});
-
-// ─── TOOL BUTTONS ────────────────────────────────────────────────────────
-const btnPen    = document.getElementById('btn-pen');
-const btnEraser = document.getElementById('btn-eraser');
-
-function setTool(next) {
-  tool = next;
-  btnPen.classList.toggle('active', next === 'pen');
-  btnEraser.classList.toggle('active', next === 'eraser');
-  btnPen.setAttribute('aria-pressed', next === 'pen');
-  btnEraser.setAttribute('aria-pressed', next === 'eraser');
-}
-
-btnPen.addEventListener('click', () => setTool('pen'));
-btnEraser.addEventListener('click', () => setTool('eraser'));
-
-// ─── COLOR ───────────────────────────────────────────────────────────────
-const customColor = document.getElementById('custom-color');
-
-function setColor(hex, fromSwatch) {
-  color = hex;
-  customColor.value = hex;
-  // Snap swatches' active state
-  document.querySelectorAll('.swatch').forEach(s => {
-    const match = s.dataset.color.toLowerCase() === hex.toLowerCase();
-    s.classList.toggle('active', match);
-    s.setAttribute('aria-checked', match);
-  });
-  // Picking a color implies "I want to draw" — auto-switch to pen
-  setTool('pen');
-}
-
-document.querySelectorAll('.swatch').forEach(s => {
-  s.addEventListener('click', () => setColor(s.dataset.color, true));
-});
-customColor.addEventListener('input', e => setColor(e.target.value, false));
-
-// Initialize default color
-setColor(DEFAULT_COLOR, true);
-
-// ─── UNDO / CLEAR ────────────────────────────────────────────────────────
-document.getElementById('undo-btn').addEventListener('click', undo);
-document.getElementById('clear-btn').addEventListener('click', () => {
-  saveUndo();
-  ctx.save();
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  bgImg.style.display = 'block';
+  placeholder.style.display = 'none';
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.restore();
+  undoStack = [];
+  applyTheme(THEMES[key] || DEFAULT_THEME);
 });
+
+// ── TOOLS ─────────────────────────────────────────────────────────────────
+btnPen.addEventListener('click', () => {
+  tool = 'pen';
+  btnPen.classList.add('pen-active');
+  btnEraser.classList.remove('eraser-active');
+});
+
+btnEraser.addEventListener('click', () => {
+  tool = 'eraser';
+  btnEraser.classList.add('eraser-active');
+  btnPen.classList.remove('pen-active');
+});
+
+// ── COLOR ─────────────────────────────────────────────────────────────────
+document.querySelectorAll('.swatch').forEach(s => {
+  s.addEventListener('click', () => {
+    color = s.dataset.color;
+    document.querySelectorAll('.swatch').forEach(x => x.classList.remove('active'));
+    s.classList.add('active');
+    document.getElementById('custom-color').value = color;
+    tool = 'pen'; btnPen.classList.add('pen-active'); btnEraser.classList.remove('eraser-active');
+  });
+});
+
+document.getElementById('custom-color').addEventListener('input', e => {
+  color = e.target.value;
+  document.querySelectorAll('.swatch').forEach(x => x.classList.remove('active'));
+  tool = 'pen'; btnPen.classList.add('pen-active'); btnEraser.classList.remove('eraser-active');
+});
+
+// ── UNDO / CLEAR ──────────────────────────────────────────────────────────
+document.getElementById('undo-btn').addEventListener('click', undo);
+document.getElementById('clear-btn').addEventListener('click', () => { saveUndo(); ctx.clearRect(0, 0, canvas.width, canvas.height); });
 
 function undo() {
   if (!undoStack.length) return;
-  const data = undoStack.pop();
   const img = new Image();
-  img.onload = () => {
-    const cssW = wrap.clientWidth, cssH = wrap.clientHeight;
-    ctx.save();
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.restore();
-    ctx.drawImage(img, 0, 0, cssW, cssH);
-  };
-  img.src = data;
+  img.src = undoStack.pop();
+  img.onload = () => { ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.drawImage(img, 0, 0); };
 }
 
-// ─── KEYBOARD SHORTCUTS ──────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); return; }
-  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
-  if (e.key === 'e' || e.key === 'E') setTool('eraser');
-  if (e.key === 'p' || e.key === 'P') setTool('pen');
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); }
+  if (e.key === 'e' || e.key === 'E') btnEraser.click();
+  if (e.key === 'p' || e.key === 'P') btnPen.click();
 });
-
-// ─── INIT ────────────────────────────────────────────────────────────────
-applyTheme(DEFAULT_THEME);
 </script>
 
 <script>
-// ─── SERVICE WORKER ──────────────────────────────────────────────────────
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then(() => console.log('SW registered'))
-      .catch(e => console.log('SW failed:', e));
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
   });
 }
 </script>
