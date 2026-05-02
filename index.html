@@ -341,18 +341,31 @@ let isDrawing = false, lastX = 0, lastY = 0;
 let undoStack = [];
 
 // ── CANVAS RESIZE ─────────────────────────────────────────────────────────
-function resizeCanvas() {
-  // Save drawing pixels
+async function resizeCanvas() {
   const w = wrap.clientWidth;
   const h = wrap.clientHeight;
   if (w === 0 || h === 0) return;
-  const prev = ctx.getImageData(0, 0, canvas.width || 1, canvas.height || 1);
+
+  // Snapshot current drawing scaled to new dimensions
+  let snapshot = null;
+  if (canvas.width > 0 && canvas.height > 0) {
+    try { snapshot = await createImageBitmap(canvas); } catch(e) {}
+  }
+
   canvas.width  = w;
   canvas.height = h;
-  ctx.putImageData(prev, 0, 0);
+
+  if (snapshot) {
+    ctx.drawImage(snapshot, 0, 0, w, h);
+    snapshot.close && snapshot.close();
+  }
 }
-window.addEventListener('resize', resizeCanvas);
-// Delay initial resize until layout is settled
+
+window.addEventListener('resize', () => {
+  clearTimeout(window._rsz);
+  window._rsz = setTimeout(resizeCanvas, 60);
+});
+
 requestAnimationFrame(() => requestAnimationFrame(resizeCanvas));
 
 // ── DRAWING ───────────────────────────────────────────────────────────────
@@ -367,7 +380,8 @@ function currentSize() { return tool === 'eraser' ? ERASER_SIZE : PEN_SIZE; }
 
 function saveUndo() {
   try {
-    undoStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+    // Store dataURL — works across resize/rotation
+    undoStack.push(canvas.toDataURL());
     if (undoStack.length > 40) undoStack.shift();
   } catch(e) {}
 }
@@ -484,8 +498,12 @@ document.getElementById('clear-btn').addEventListener('click', () => { saveUndo(
 
 function undo() {
   if (!undoStack.length) return;
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.putImageData(undoStack.pop(), 0, 0);
+  const img = new Image();
+  img.onload = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  };
+  img.src = undoStack.pop();
 }
 
 document.addEventListener('keydown', e => {
