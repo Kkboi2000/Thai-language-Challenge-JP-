@@ -1,4 +1,4 @@
-const CACHE = 'thai-challenge-v6';
+const CACHE = 'thai-challenge-v2';
 
 const ASSETS = [
   './',
@@ -25,27 +25,26 @@ const ASSETS = [
   './sheets/5b.webp',
 ];
 
-// Install — cache everything fault-tolerantly, take over immediately
+// Install — cache everything
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE).then(async cache => {
-      // Load files one by one. If one fails, the rest still succeed.
-      for (const asset of ASSETS) {
-        try {
-          await cache.add(asset);
-        } catch (err) {
-          console.warn('Failed to cache:', asset, err);
-        }
-      }
-    })
+    caches.open(CACHE).then(cache => cache.addAll(ASSETS))
   );
   self.skipWaiting();
 });
 
+// Activate — clean old caches
+self.addEventListener('activate', e => {
+  e.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+    )
+  );
+  self.clients.claim();
+});
+
 // Fetch — cache first, fallback to network
 self.addEventListener('fetch', e => {
-  // Only handle GET requests
-  if (e.request.method !== 'GET') return;
   e.respondWith(
     caches.match(e.request).then(cached => cached || fetch(e.request))
   );
