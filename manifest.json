@@ -1,6 +1,6 @@
 {
   "name": "タイ語チャレンジ",
-  "short_name": "タイ語",
+  "short_name": "マスタイ",
   "description": "タイ語と日本語のマッチング練習",
   "start_url": "./index.html",
   "display": "standalone",
