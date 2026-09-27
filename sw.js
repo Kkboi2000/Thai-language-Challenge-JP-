@@ -1,35 +1,19 @@
-const CACHE = 'thai-challenge-v2';
+const CACHE = 'thai-challenge-v3';
 
 const ASSETS = [
   './',
   './index.html',
+  './challenges.js',
   './manifest.json',
   './fonts/mplus-japanese-700.woff2',
   './fonts/mplus-latin-700.woff2',
   './fonts/mplus-japanese-900.woff2',
   './fonts/mplus-latin-900.woff2',
-  './sheets/1a.webp',
-  './sheets/1b.webp',
-  './sheets/1c.webp',
-  './sheets/2a.webp',
-  './sheets/2b.webp',
-  './sheets/2c.webp',
-  './sheets/2d.webp',
-  './sheets/3a.webp',
-  './sheets/3b.webp',
-  './sheets/3c.webp',
-  './sheets/3d.webp',
-  './sheets/4a.webp',
-  './sheets/4b.webp',
-  './sheets/5a.webp',
-  './sheets/5b.webp',
 ];
 
 // Install — cache everything
 self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE).then(cache => cache.addAll(ASSETS))
-  );
+  e.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)));
   self.skipWaiting();
 });
 
@@ -43,9 +27,24 @@ self.addEventListener('activate', e => {
   self.clients.claim();
 });
 
-// Fetch — cache first, fallback to network
+// Fetch — page and challenge data: network first (so edits show up), cache when offline.
+//         Everything else (fonts): cache first.
 self.addEventListener('fetch', e => {
-  e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request))
-  );
+  const url = new URL(e.request.url);
+  const fresh = e.request.mode === 'navigate' || url.pathname.endsWith('challenges.js');
+
+  if (fresh) {
+    e.respondWith(
+      fetch(e.request)
+        .then(res => {
+          const copy = res.clone();
+          caches.open(CACHE).then(c => c.put(e.request, copy));
+          return res;
+        })
+        .catch(() => caches.match(e.request).then(r => r || caches.match('./index.html')))
+    );
+    return;
+  }
+
+  e.respondWith(caches.match(e.request).then(cached => cached || fetch(e.request)));
 });
