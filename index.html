@@ -144,8 +144,7 @@
   #board {
     flex: 1; position: relative; min-height: 0;
     display: grid;
-    grid-template-columns: minmax(0, 250px) clamp(44px, 24vw, 340px) minmax(0, 250px);
-    justify-content: space-between;
+    grid-template-columns: minmax(0, 1fr) 0 minmax(0, 1fr); /* cards hug the outer edges; the middle is whatever is left */
     grid-auto-rows: 1fr;
     touch-action: none;
     /* タイもじ watermark, embedded so there's no extra file to upload */
@@ -174,7 +173,7 @@
      so every dot lines up in two straight columns with a wide gap between */
   .node {
     position: relative; z-index: 2;
-    align-self: center; justify-self: stretch; min-height: 54px;
+    align-self: center; min-height: 54px; box-sizing: border-box;
     display: flex; align-items: center; min-width: 0;
     background: var(--paper); color: inherit; font: inherit;
     border: 2.5px solid var(--ink); border-radius: 14px;
@@ -182,14 +181,14 @@
     font-size: 30px; /* JS sets one size for all words */
     transition: background 0.15s, border-color 0.2s, box-shadow 0.2s;
   }
-  .node.L { grid-column: 1; justify-content: flex-end; text-align: right; }
-  .node.R { grid-column: 3; justify-content: flex-start; text-align: left; }
+  .node.L { grid-column: 1; justify-self: start; justify-content: flex-end; text-align: right; }
+  .node.R { grid-column: 3; justify-self: end;   justify-content: flex-start; text-align: left; }
   .node:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 
   .label { min-width: 0; flex: 1; display: flex; flex-direction: column; line-height: 1.3; overflow: hidden; }
   .node.L .label { align-items: flex-end; }
   .th { font-family: var(--thai); font-weight: 700; white-space: nowrap; font-size: 1.15em; /* Thai glyphs run small — this makes them match the Japanese */ padding: 0.12em 0; }
-  .rd { font-size: 0.5em; font-weight: 700; white-space: nowrap; color: #333; margin-top: -0.15em; }
+  .rd { font-size: 0.55em; font-weight: 700; white-space: nowrap; color: #333; margin-top: -0.15em; }
   .jp { font-size: 1em; font-weight: 700; white-space: nowrap; }
 
   .dot {
@@ -203,7 +202,6 @@
   .node.good     { border-color: var(--good); }
   .node.bad      { border-color: var(--bad); }
   @media (max-width: 600px) {
-    #board { grid-template-columns: minmax(0, 1fr) 16vw minmax(0, 1fr); }
   }
   .node:hover .dot { transform: scale(1.25); }
   .node.linked .dot { background: var(--accent); }
@@ -490,22 +488,31 @@ function load(key) {
   refresh();
 }
 
-// One size for all words — Thai and Japanese alike. The size is chosen so a
-// 6-character Japanese answer fits on one line; only a word longer than that
-// is shrunk, on its own, so nothing ever wraps inside a card.
+// Cards fit their words exactly. All cards on one side share the width of the
+// widest one, so every dot lines up; left cards sit on the left edge and right
+// cards on the right edge, leaving the middle open for the lines.
+// One text size for the whole sheet; a card may take at most 36% of the width
+// (so the middle always keeps 20%+), and only a word too long for that shrinks.
 function fitText() {
   const nodes = [...board.querySelectorAll('.node')];
   if (!nodes.length) return;
+  const W = board.clientWidth;
+  const maxCard = Math.min(W * 0.4, 300);
   const rowH = board.clientHeight / game.c.words.length;
-  const room = board.querySelector('.node.R .label').clientWidth;
-  const size = Math.max(15, Math.min(22, rowH * 0.3, room / 6.2));
+  const chrome = 44;                                   // border + padding + dot + gap
+  const size = Math.max(15, Math.min(21, rowH * 0.3));
+
   nodes.forEach(n => {
+    n.style.width = 'max-content';
     let s = size;
     n.style.fontSize = s + 'px';
-    const lab = n.querySelector('.label');
-    const over = () => [...lab.children].some(c => c.scrollWidth > lab.clientWidth + 1);
-    while (over() && s > 11) { s *= 0.95; n.style.fontSize = s + 'px'; }
+    while (n.offsetWidth > maxCard && s > 11) { s *= 0.95; n.style.fontSize = s + 'px'; }
   });
+  for (const side of ['L', 'R']) {
+    const group = nodes.filter(n => n.dataset.side === side);
+    const w = Math.ceil(Math.max(...group.map(n => n.offsetWidth)));
+    group.forEach(n => (n.style.width = w + 'px'));
+  }
 }
 
 // ── STATE → SCREEN ────────────────────────────────────────────────────────
