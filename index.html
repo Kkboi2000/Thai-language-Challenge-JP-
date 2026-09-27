@@ -133,7 +133,7 @@
   #sheet {
     height: 100%; max-width: 880px; margin: 0 auto;
     display: flex; flex-direction: column;
-    padding: 14px 16px 10px;
+    padding: 14px 12px 10px;
   }
   #sheet-title {
     text-align: center; font-weight: 900;
@@ -144,7 +144,7 @@
   #board {
     flex: 1; position: relative; min-height: 0;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) clamp(56px, 20vw, 320px) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) clamp(44px, 20vw, 320px) minmax(0, 1fr);
     grid-auto-rows: 1fr;
     touch-action: none;
     /* タイもじ watermark, embedded so there's no extra file to upload */
@@ -193,7 +193,10 @@
     border-radius: 50%; background: var(--ink);
     transition: transform 0.15s, background 0.2s, box-shadow 0.2s;
   }
-  @media (max-width: 480px) { .dot { margin: 0 7px; } }
+  @media (max-width: 600px) {
+    #board { grid-template-columns: minmax(0, 1fr) 11vw minmax(0, 1fr); }
+    .dot { margin: 0 12px; }
+  }
   .node:hover .dot { transform: scale(1.25); }
   .node.linked .dot { background: var(--accent); }
   .node.selected { background: color-mix(in srgb, var(--accent) 12%, transparent); }
@@ -485,7 +488,7 @@ function fitText() {
   const nodes = [...board.querySelectorAll('.node')];
   if (!nodes.length) return;
   const rowH = board.clientHeight / game.c.words.length;
-  const size = Math.max(16, Math.min(22, rowH * 0.3, board.clientWidth * 0.054));
+  const size = Math.max(16, Math.min(23, rowH * 0.32, board.clientWidth * 0.058));
   nodes.forEach(n => {
     let s = size;
     n.style.fontSize = s + 'px';
