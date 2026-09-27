@@ -574,7 +574,7 @@ function draw() {
   // dashed correct answers, drawn underneath wrong links
   if (g.checked && g.showAnswers) {
     g.answer.forEach((r, l) => {
-      if (g.links[l] !== r) parts.push(line(dotCenter(nodeFor('L', l)), dotCenter(nodeFor('R', r)), 'answer'));
+      if (r >= 0 && g.links[l] !== r) parts.push(line(dotCenter(nodeFor('L', l)), dotCenter(nodeFor('R', r)), 'answer'));
     });
   }
 
