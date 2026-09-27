@@ -364,9 +364,6 @@
   }
   .pick:hover { transform: translateY(-2px); }
   .pick:active { transform: scale(0.95); }
-  .pick small { font-size: 0.65rem; font-weight: 700; color: #999; }
-  .pick.perfect { background: var(--c); color: #fff; }
-  .pick.perfect small { color: #fff; }
 
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { transition: none !important; animation: none !important; }
@@ -840,7 +837,6 @@ function grade() {
 
   const total = game.links.length;
   const score = game.links.filter((r, l) => r === game.answer[l]).length;
-  saveBest(game.key, score, total);
   $('score').innerHTML = `${score}<small> / ${total}</small>`;
   $('verdict').textContent =
     score === total      ? '全問正解！🎉' :
@@ -883,16 +879,6 @@ document.addEventListener('keydown', e => {
 // ── SCREENS: title → level select → challenge ────────────────────────────
 const LEVEL_NAMES = { 1: '★ レベル1', 2: '★★ レベル2', 3: '★★★ レベル3', 4: '😮 レベル4', 5: '🤯 レベル5' };
 
-function getBest(key) {
-  try { return JSON.parse(localStorage.getItem('best:' + key)); } catch { return null; }
-}
-function saveBest(key, score, total) {
-  try {
-    const b = getBest(key);
-    if (!b || score > b.score) localStorage.setItem('best:' + key, JSON.stringify({ score, total }));
-  } catch {}
-}
-
 function showSetup() {
   const wrap = $('levels');
   wrap.replaceChildren();
@@ -903,11 +889,6 @@ function showSetup() {
     const grid = el('div', 'lvl-grid');
     KEYS.filter(k => k[0] === lvl).forEach(k => {
       const b = el('button', 'pick', k);
-      const best = getBest(k);
-      if (best) {
-        b.append(el('small', null, best.score === best.total ? '全問正解 ✓' : `ベスト ${best.score}/${best.total}`));
-        if (best.score === best.total) b.classList.add('perfect');
-      }
       b.addEventListener('click', () => openChallenge(k));
       grid.append(b);
     });
