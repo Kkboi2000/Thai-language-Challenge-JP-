@@ -342,13 +342,6 @@
   .pick.perfect { background: var(--c); color: #fff; }
   .pick.perfect small { color: #fff; }
 
-  #menu-btn {
-    width: 34px; height: 34px; flex-shrink: 0; border-radius: 8px;
-    border: 2px solid #333; background: #1a1a1a; color: #fff;
-    font-size: 1rem; cursor: pointer;
-  }
-  #menu-btn:hover { border-color: var(--accent); }
-
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { transition: none !important; animation: none !important; }
   }
@@ -372,7 +365,6 @@
 
 <!-- TOP BAR -->
 <div id="topbar">
-  <button id="menu-btn" aria-label="レベル選択へ">☰</button>
   <h1>🇹🇭 タイ語</h1>
   <div class="vsep"></div>
   <select id="level-select" aria-label="チャレンジを選ぶ">
@@ -900,7 +892,6 @@ function openChallenge(k) {
 }
 
 $('start-btn').addEventListener('click', () => { $('title').classList.add('hide'); showSetup(); });
-$('menu-btn').addEventListener('click', showSetup);
 
 // ?c=2b opens a challenge directly (skips the title — handy for sharing a link)
 const startKey = new URLSearchParams(location.search).get('c');
