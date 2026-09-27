@@ -181,12 +181,12 @@
   .node.R { grid-column: 3; justify-content: flex-start; text-align: left; }
   .node:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
 
-  .label { min-width: 0; overflow: hidden; display: flex; flex-direction: column; line-height: 1.3; }
+  .label { min-width: 0; max-width: 100%; overflow: visible; display: flex; flex-direction: column; line-height: 1.3; }
   .label > span { max-width: none; }
   .node.L .label { align-items: flex-end; }
-  .th { font-family: var(--thai); font-weight: 700; white-space: nowrap; padding: 0.12em 0; }
-  .rd { font-size: 0.5em; font-weight: 700; white-space: nowrap; color: #333; margin-top: -0.25em; }
-  .jp { font-size: 0.72em; font-weight: 700; white-space: nowrap; }
+  .th { font-family: var(--thai); font-weight: 700; white-space: nowrap; font-size: 1.15em; /* Thai glyphs run small — this makes them match the Japanese */ padding: 0.12em 0; }
+  .rd { font-size: 0.5em; font-weight: 700; white-space: nowrap; color: #333; margin-top: -0.15em; }
+  .jp { font-size: 1em; font-weight: 700; white-space: normal; line-break: strict; }
 
   .dot {
     flex-shrink: 0; width: 14px; height: 14px; margin: 0 12px;
@@ -479,21 +479,19 @@ function load(key) {
   refresh();
 }
 
-// Fit each word to its row: as large as the row allows, shrunk if too wide.
+// One size for all words — Thai and Japanese alike, on every challenge.
+// Only a Thai word too long for its column is shrunk, on its own.
 function fitText() {
-  const nodes = board.querySelectorAll('.node');
+  const nodes = [...board.querySelectorAll('.node')];
   if (!nodes.length) return;
   const rowH = board.clientHeight / game.c.words.length;
-  const hasReading = game.c.words.some(w => w[1]);
-  const base = Math.max(14, Math.min(32, rowH * (hasReading ? 0.34 : 0.42), board.clientWidth * 0.075));
+  const size = Math.max(16, Math.min(22, rowH * 0.3, board.clientWidth * 0.054));
   nodes.forEach(n => {
-    let size = base;
-    n.style.fontSize = size + 'px';
-    const lab = n.querySelector('.label');
-    const tooWide = () => Math.max(...[...lab.children].map(c => c.scrollWidth)) > lab.clientWidth + 1;
-    while (tooWide() && size > 12) {
-      size *= 0.92;
-      n.style.fontSize = size + 'px';
+    let s = size;
+    n.style.fontSize = s + 'px';
+    const lab = n.querySelector('.label'), th = n.querySelector('.th');
+    while (th && th.scrollWidth > lab.clientWidth + 1 && s > 12) {
+      s *= 0.95; n.style.fontSize = s + 'px';
     }
   });
 }
