@@ -223,6 +223,28 @@
     transition: transform 0.35s cubic-bezier(.34,1.56,.64,1), opacity 0.2s;
   }
   #check-btn.show { transform: scale(1); opacity: 1; pointer-events: auto; }
+  #check-btn:not(.ready) {
+    background: var(--paper); color: var(--accent);
+    box-shadow: inset 0 0 0 3px var(--accent), 0 0 0 4px var(--paper);
+  }
+  #check-btn.ready { animation: pop 0.45s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes pop { 50% { transform: scale(1.18); } }
+
+  /* ── CONFIRM (checking before every word is linked) ── */
+  #confirm {
+    position: absolute; inset: 0; z-index: 8;
+    display: none; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.45); padding: 20px;
+  }
+  #confirm.show { display: flex; }
+  #confirm-box {
+    width: min(340px, 100%); background: #0a0a0a; color: #fff;
+    border: 2px solid var(--accent); border-radius: 16px;
+    padding: 20px 18px 16px; text-align: center;
+  }
+  #confirm-box p { font-weight: 900; font-size: 1rem; line-height: 1.6; margin-bottom: 16px; }
+  #confirm-box p small { display: block; font-size: 0.8rem; font-weight: 700; color: #999; }
+  #confirm-box .actions { display: flex; gap: 8px; justify-content: center; }
   #check-btn:focus-visible { outline: 3px solid var(--ink); outline-offset: 4px; }
 
   /* ── RESULT PANEL ── */
@@ -317,6 +339,16 @@
 
   <button id="check-btn" aria-label="答え合わせ">➤</button>
 
+  <div id="confirm" role="dialog" aria-modal="true" aria-labelledby="confirm-msg">
+    <div id="confirm-box">
+      <p id="confirm-msg"></p>
+      <div class="actions">
+        <button class="res-btn" id="confirm-no">つづける</button>
+        <button class="res-btn primary" id="confirm-yes">答え合わせする</button>
+      </div>
+    </div>
+  </div>
+
   <div id="result" role="status" aria-live="polite">
     <div id="score"></div>
     <div id="verdict"></div>
@@ -390,6 +422,7 @@ function el(tag, cls, text) {
 function load(key) {
   board.querySelectorAll('.node').forEach(n => n.remove());
   result.classList.remove('show');
+  closeConfirm();
   $('sheet').style.paddingBottom = '';
   board.classList.remove('locked');
 
@@ -461,7 +494,8 @@ function refresh() {
 
   $('undo-btn').disabled  = !g || g.checked || !g.history.length;
   $('clear-btn').disabled = !g || g.checked || !linked;
-  checkBtn.classList.toggle('show', !!g && !g.checked && linked === total);
+  checkBtn.classList.toggle('show',  !!g && !g.checked && linked > 0);
+  checkBtn.classList.toggle('ready', !!g && !g.checked && linked === total);
 
   if (!g) { svg.replaceChildren(); $('pips').replaceChildren(); return; }
 
@@ -472,11 +506,12 @@ function refresh() {
     nodeFor('R', r).classList.add('linked');
     if (g.checked) nodeFor('L', l).classList.add(r === g.answer[l] ? 'good' : 'bad');
   });
+  if (g.checked) g.links.forEach((r, l) => { if (r < 0) nodeFor('L', l).classList.add('bad'); });
   if (g.selected) g.selected.classList.add('selected');
 
   const pips = $('pips').children;
   g.links.forEach((r, l) => {
-    pips[l].className = 'pip' + (r < 0 ? '' : !g.checked ? ' on' : r === g.answer[l] ? ' good' : ' bad');
+    pips[l].className = 'pip' + (!g.checked && r < 0 ? '' : r < 0 ? ' bad' : !g.checked ? ' on' : r === g.answer[l] ? ' good' : ' bad');
   });
 
   draw();
@@ -543,7 +578,9 @@ function draw() {
   // ○ / × marks, like a teacher's red pen — placed near the Thai side of each line
   if (g.checked) {
     g.links.forEach((r, l) => {
-      const a = dotCenter(nodeFor('L', l)), b = dotCenter(nodeFor('R', r));
+      const a = dotCenter(nodeFor('L', l));
+      if (r < 0) { parts.push(markCross(a.x + 26, a.y)); return; } // left blank
+      const b = dotCenter(nodeFor('R', r));
       const ok = r === g.answer[l];
       const x = a.x + (b.x - a.x) * 0.16, y = a.y + (b.y - a.y) * 0.16;
       parts.push(ok ? markCircle(x, y) : markCross(x, y));
@@ -650,6 +687,19 @@ $('clear-btn').addEventListener('click', () => {
 
 // ── CHECK ─────────────────────────────────────────────────────────────────
 checkBtn.addEventListener('click', () => {
+  const left = game.links.filter(r => r < 0).length;
+  if (!left) return grade();
+  $('confirm-msg').innerHTML =
+    `まだ ${left} つ つないでいません。<br>このまま答え合わせしますか？<small>つないでいない問題は × になります</small>`;
+  $('confirm').classList.add('show');
+  $('confirm-no').focus();
+});
+function closeConfirm() { $('confirm').classList.remove('show'); }
+$('confirm-no').addEventListener('click', closeConfirm);
+$('confirm-yes').addEventListener('click', () => { closeConfirm(); grade(); });
+$('confirm').addEventListener('click', e => { if (e.target.id === 'confirm') closeConfirm(); });
+
+function grade() {
   game.checked = true;
   game.selected = null;
   board.classList.add('locked');
@@ -671,7 +721,7 @@ checkBtn.addEventListener('click', () => {
   result.classList.add('show');
   const room = result.offsetHeight + 8 - $('sheet-foot').offsetHeight;
   $('sheet').style.paddingBottom = Math.max(10, room) + 'px';
-});
+}
 
 $('answers-btn').addEventListener('click', () => {
   game.showAnswers = !game.showAnswers;
@@ -692,6 +742,7 @@ document.fonts?.ready.then(() => { if (game) { fitText(); draw(); } });
 
 document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); }
+  if (e.key === 'Escape' && $('confirm').classList.contains('show')) return closeConfirm();
   if (e.key === 'Escape' && game && game.selected) { game.selected = null; refresh(); }
 });
 
