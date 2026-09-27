@@ -131,7 +131,7 @@
   #placeholder p { font-size: 1rem; font-weight: 700; color: #aaa; }
 
   #sheet {
-    height: 100%; max-width: 620px; margin: 0 auto;
+    height: 100%; max-width: 880px; margin: 0 auto;
     display: flex; flex-direction: column;
     padding: 14px 8px 10px;
   }
@@ -144,7 +144,7 @@
   #board {
     flex: 1; position: relative; min-height: 0;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(36px, 0.4fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) clamp(56px, 20vw, 320px) minmax(0, 1fr);
     grid-auto-rows: 1fr;
     touch-action: none;
     /* タイもじ watermark, embedded so there's no extra file to upload */
@@ -189,10 +189,11 @@
   .jp { font-size: 0.72em; font-weight: 700; white-space: nowrap; }
 
   .dot {
-    flex-shrink: 0; width: 14px; height: 14px; margin: 0 8px;
+    flex-shrink: 0; width: 14px; height: 14px; margin: 0 12px;
     border-radius: 50%; background: var(--ink);
     transition: transform 0.15s, background 0.2s, box-shadow 0.2s;
   }
+  @media (max-width: 480px) { .dot { margin: 0 7px; } }
   .node:hover .dot { transform: scale(1.25); }
   .node.linked .dot { background: var(--accent); }
   .node.selected { background: color-mix(in srgb, var(--accent) 12%, transparent); }
@@ -213,7 +214,7 @@
 
   /* ── CHECK BUTTON (➤) — appears once every word is linked ── */
   #check-btn {
-    position: absolute; right: max(16px, calc(50% - 294px)); bottom: 14px; z-index: 6;
+    position: absolute; right: max(16px, calc(50% - 424px)); bottom: 14px; z-index: 6;
     width: clamp(52px, 8vh, 64px); height: clamp(52px, 8vh, 64px); border-radius: 50%;
     border: none; background: var(--accent); color: #fff;
     font-size: 1.7rem; line-height: 1; padding-left: 5px;
@@ -250,7 +251,7 @@
   /* ── RESULT PANEL ── */
   #result {
     position: absolute; left: 50%; bottom: 0; z-index: 7;
-    width: min(620px, 100%);
+    width: min(880px, 100%);
     background: #0a0a0a; color: #fff;
     border-top: 3px solid var(--accent);
     border-radius: 18px 18px 0 0;
@@ -290,26 +291,39 @@
       <option value="1a">チャレンジ 1a ★</option>
       <option value="1b">チャレンジ 1b ★</option>
       <option value="1c">チャレンジ 1c ★</option>
+      <option value="1d">チャレンジ 1d ★</option>
+      <option value="1e">チャレンジ 1e ★</option>
+      <option value="1f">チャレンジ 1f ★</option>
     </optgroup>
     <optgroup label="★★ レベル2">
       <option value="2a">チャレンジ 2a ★★</option>
       <option value="2b">チャレンジ 2b ★★</option>
       <option value="2c">チャレンジ 2c ★★</option>
       <option value="2d">チャレンジ 2d ★★</option>
+      <option value="2e">チャレンジ 2e ★★</option>
+      <option value="2f">チャレンジ 2f ★★</option>
+      <option value="2g">チャレンジ 2g ★★</option>
     </optgroup>
     <optgroup label="★★★ レベル3">
       <option value="3a">チャレンジ 3a ★★★</option>
       <option value="3b">チャレンジ 3b ★★★</option>
       <option value="3c">チャレンジ 3c ★★★</option>
       <option value="3d">チャレンジ 3d ★★★</option>
+      <option value="3e">チャレンジ 3e ★★★</option>
+      <option value="3f">チャレンジ 3f ★★★</option>
+      <option value="3g">チャレンジ 3g ★★★</option>
     </optgroup>
     <optgroup label="😮 レベル4">
       <option value="4a">チャレンジ 4a 😮</option>
       <option value="4b">チャレンジ 4b 😮</option>
+      <option value="4c">チャレンジ 4c 😮</option>
+      <option value="4d">チャレンジ 4d 😮</option>
     </optgroup>
     <optgroup label="🤯 レベル5">
       <option value="5a">チャレンジ 5a 🤯</option>
       <option value="5b">チャレンジ 5b 🤯</option>
+      <option value="5c">チャレンジ 5c 🤯</option>
+      <option value="5d">チャレンジ 5d 🤯</option>
     </optgroup>
   </select>
 </div>
@@ -471,7 +485,7 @@ function fitText() {
   if (!nodes.length) return;
   const rowH = board.clientHeight / game.c.words.length;
   const hasReading = game.c.words.some(w => w[1]);
-  const base = Math.max(16, Math.min(36, rowH * (hasReading ? 0.46 : 0.56)));
+  const base = Math.max(16, Math.min(40, rowH * (hasReading ? 0.46 : 0.56)));
   nodes.forEach(n => {
     let size = base;
     n.style.fontSize = size + 'px';
