@@ -144,7 +144,7 @@
   #board {
     flex: 1; position: relative; min-height: 0;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 0 minmax(0, 1fr); /* cards hug the outer edges; the middle is whatever is left */
+    grid-template-columns: minmax(0, 1fr) var(--gap, 36%) minmax(0, 1fr); /* fixed open middle for the lines */
     grid-auto-rows: 1fr;
     touch-action: none;
     /* タイもじ watermark, embedded so there's no extra file to upload */
@@ -177,12 +177,12 @@
     display: flex; align-items: center; min-width: 0;
     background: var(--paper); color: inherit; font: inherit;
     border: 2.5px solid var(--ink); border-radius: 14px;
-    cursor: pointer; padding: 6px 10px;
+    cursor: pointer; padding: 5px 9px;
     font-size: 30px; /* JS sets one size for all words */
     transition: background 0.15s, border-color 0.2s, box-shadow 0.2s;
   }
-  .node.L { grid-column: 1; justify-self: start; justify-content: flex-end; text-align: right; }
-  .node.R { grid-column: 3; justify-self: end;   justify-content: flex-start; text-align: left; }
+  .node.L { grid-column: 1; justify-self: end; justify-content: flex-end; text-align: right; }
+  .node.R { grid-column: 3; justify-self: start; justify-content: flex-start; text-align: left; }
   .node:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 
   .label { min-width: 0; flex: 1; display: flex; flex-direction: column; line-height: 1.3; overflow: hidden; }
@@ -196,8 +196,8 @@
     border-radius: 50%; background: var(--ink);
     transition: transform 0.15s, background 0.2s, box-shadow 0.2s;
   }
-  .node.L .dot { margin-left: 8px; }
-  .node.R .dot { margin-right: 8px; }
+  .node.L .dot { margin-left: 7px; }
+  .node.R .dot { margin-right: 7px; }
   .node.linked   { border-color: var(--accent); }
   .node.good     { border-color: var(--good); }
   .node.bad      { border-color: var(--bad); }
@@ -488,31 +488,28 @@ function load(key) {
   refresh();
 }
 
-// Cards fit their words exactly. All cards on one side share the width of the
-// widest one, so every dot lines up; left cards sit on the left edge and right
-// cards on the right edge, leaving the middle open for the lines.
-// One text size for the whole sheet; a card may take at most 36% of the width
-// (so the middle always keeps 20%+), and only a word too long for that shrinks.
+// Each card fits its own word exactly. Left cards end at the same line and
+// right cards start at the same line, so the dots form two straight columns
+// with a fixed open middle between them. One text size for the whole sheet;
+// only a word too long for its column shrinks, on its own.
 function fitText() {
   const nodes = [...board.querySelectorAll('.node')];
   if (!nodes.length) return;
   const W = board.clientWidth;
-  const maxCard = Math.min(W * 0.4, 300);
+  board.style.setProperty('--gap', Math.round(Math.min(W * 0.3, 320)) + 'px');
+  const col = (W - Math.min(W * 0.3, 320)) / 2;
   const rowH = board.clientHeight / game.c.words.length;
-  const chrome = 44;                                   // border + padding + dot + gap
   const size = Math.max(15, Math.min(21, rowH * 0.3));
-
   nodes.forEach(n => {
     n.style.width = 'max-content';
     let s = size;
     n.style.fontSize = s + 'px';
-    while (n.offsetWidth > maxCard && s > 11) { s *= 0.95; n.style.fontSize = s + 'px'; }
+    // a long reading shrinks first (it's only a hint); the word itself keeps the sheet size
+    const rd = n.querySelector('.rd');
+    if (rd) { let r = 0.55; rd.style.fontSize = r + 'em';
+              while (n.offsetWidth > col && r > 0.42) { r -= 0.01; rd.style.fontSize = r + 'em'; } }
+    while (n.offsetWidth > col && s > 11) { s *= 0.95; n.style.fontSize = s + 'px'; }
   });
-  for (const side of ['L', 'R']) {
-    const group = nodes.filter(n => n.dataset.side === side);
-    const w = Math.ceil(Math.max(...group.map(n => n.offsetWidth)));
-    group.forEach(n => (n.style.width = w + 'px'));
-  }
 }
 
 // ── STATE → SCREEN ────────────────────────────────────────────────────────
