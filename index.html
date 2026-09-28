@@ -529,6 +529,7 @@ const select = $('level-select'), board = $('board'), svg = $('lines');
 const placeholder = $('placeholder'), result = $('result'), checkBtn = $('check-btn');
 const SVGNS = 'http://www.w3.org/2000/svg';
 const KEYS = Object.keys(CHALLENGES);
+const AUDIO_MAX_LEVEL = 3;   // levels 4–5 are slang/abbreviations — a voice would read them wrong
 
 // ── STATE ─────────────────────────────────────────────────────────────────
 //   links[i] = index of the Japanese option linked to Thai word i (−1 = none)
@@ -583,6 +584,8 @@ function load(key) {
   placeholder.style.display = 'none';
   applyTheme(THEMES[key[0]] || THEMES[1]);
   $('sheet-title').textContent = `チャレンジ ${key} ${game.c.stars}`;
+  const speakable = +key[0] <= AUDIO_MAX_LEVEL;
+  $('audio-btn').style.visibility = speakable ? '' : 'hidden';
 
   game.c.words.forEach(([thai, reading], i) => {
     const b = el('button', 'node L');
@@ -591,7 +594,8 @@ function load(key) {
     const lab = el('span', 'label');
     lab.append(el('span', 'th', thai));
     if (reading) lab.append(el('span', 'rd', reading));
-    b.append(el('span', 'say', '🔊'), lab, el('span', 'dot'));
+    if (speakable) b.append(el('span', 'say', '🔊'));
+    b.append(lab, el('span', 'dot'));
     b.setAttribute('aria-label', reading ? `${thai} (${reading})` : thai);
     board.append(b);
   });
