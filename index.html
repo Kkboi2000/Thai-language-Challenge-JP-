@@ -124,7 +124,24 @@
   .pip.on   { background: var(--accent); border-color: var(--accent); }
   .pip.good { background: var(--good);   border-color: var(--good); }
   .pip.bad  { background: var(--bad);    border-color: var(--bad); }
-  #toolbar-spacer { width: 132px; flex-shrink: 0; } /* balances the left buttons */
+  #toolbar-spacer { width: 132px; flex-shrink: 1; min-width: 0; display: flex; justify-content: flex-end; } /* balances the left buttons */
+  #audio-btn[aria-pressed="true"] { border-color: var(--accent); color: #fff; }
+  @media (max-width: 480px) { #audio-btn .lbl { display: none; } } /* icon only on phones */
+
+  /* 🔊 badge on the corner of each Thai card — takes no width, so words keep their size */
+  .say {
+    display: none; position: absolute; top: -11px; left: -11px; z-index: 3;
+    width: 26px; height: 26px; align-items: center; justify-content: center;
+    border-radius: 50%; border: 2px solid var(--ink); background: #fff;
+    font-size: 13px; line-height: 1; cursor: pointer;
+    transition: background 0.15s, transform 0.15s;
+  }
+  .say::before { content: ''; position: absolute; inset: -8px; } /* bigger tap area */
+  .audio-on .say { display: flex; }
+  .say:hover { background: color-mix(in srgb, var(--accent) 25%, #fff); }
+  .say.speaking { background: var(--accent); animation: say-pulse 0.5s ease-in-out infinite alternate; }
+  @keyframes say-pulse { to { transform: scale(1.15); } }
+  .locked .say { cursor: pointer; }
 
   /* ── STAGE (the worksheet) ── */
   #stage { flex: 1; position: relative; overflow: hidden; background: var(--paper); color: var(--ink); }
@@ -160,13 +177,13 @@
 
   #lines { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; z-index: 1; }
   #lines .link {
-    stroke: var(--accent); stroke-width: 4; stroke-linecap: round; fill: none;
+    stroke: var(--ink); stroke-width: 4; stroke-linecap: round; fill: none;
     transition: stroke 0.35s;
   }
   #lines .link.good { stroke: var(--good); }
   #lines .link.bad  { stroke: var(--bad); }
   #lines .answer { stroke: var(--good); stroke-width: 3; stroke-dasharray: 2 9; stroke-linecap: round; opacity: 0.9; }
-  #lines .temp { stroke: var(--accent); stroke-width: 3; stroke-dasharray: 1 8; stroke-linecap: round; }
+  #lines .temp { stroke: var(--ink); stroke-width: 3; stroke-dasharray: 1 8; stroke-linecap: round; }
   #lines .hit { stroke: transparent; stroke-width: 22; pointer-events: stroke; cursor: pointer; }
   #lines .mark * { fill: none; stroke-linecap: round; }
   #lines .mark .halo { stroke: var(--paper); stroke-width: 9; }
@@ -324,18 +341,25 @@
     transform: rotate(-9deg);
     -webkit-text-stroke: 0.6cqw #fff; paint-order: stroke fill;
     text-shadow: 0 1.2cqw 0 rgba(0,0,0,0.12);
-    animation: pop-title 0.7s cubic-bezier(.34,1.56,.64,1) both;
+    animation: pop-title 0.7s cubic-bezier(.34,1.56,.64,1) both,
+               bounce-title 2s ease-in-out 0.7s infinite;
   }
   .t-line::after {                                   /* marker stroke behind the words */
     content: ''; position: absolute; left: -2%; right: -4%; z-index: -1; border-radius: 99px;
   }
   #t1 { left: 13%; top: 3%;  font-size: 17cqw; }
   #t1::after { bottom: -18%; height: 26%; background: #f8d94a; transform: rotate(-4deg); }
-  #t2 { left: 29%; top: 13.5%; font-size: 13.2cqw; animation-delay: 0.18s; }
+  #t2 { left: 29%; top: 13.5%; font-size: 13.2cqw; animation-delay: 0.18s, 1s; } /* second line bounces a beat later */
   #t2::after { bottom: -14%; height: 11%; background: #f07a96; transform: rotate(-3deg); }
   @keyframes pop-title {
     0%   { opacity: 0; transform: rotate(-9deg) scale(0.4); }
     100% { opacity: 1; transform: rotate(-9deg) scale(1); }
+  }
+  @keyframes bounce-title {             /* hop, squash on landing, small rebound, rest */
+    0%, 60%, 100% { transform: rotate(-9deg) translateY(0) scale(1); }
+    20% { transform: rotate(-9deg) translateY(-10%) scale(1.02); }
+    34% { transform: rotate(-9deg) translateY(0) scale(1.05, 0.94); }
+    46% { transform: rotate(-9deg) translateY(-3%) scale(1); }
   }
   #title.hide { opacity: 0; visibility: hidden; }
   #start-btn {
@@ -356,21 +380,43 @@
     transition: opacity 0.3s, visibility 0.3s;
   }
   #setup.hide { opacity: 0; visibility: hidden; }
-  #setup-inner { max-width: 560px; margin: 0 auto; }
+  #setup-inner { max-width: 420px; margin: 10vh auto 0; }
   #setup h2 { text-align: center; font-weight: 900; font-size: 1.5rem; letter-spacing: 0.06em; margin-bottom: 4px; }
   #setup .sub { text-align: center; font-weight: 700; font-size: 0.85rem; color: #999; margin-bottom: 18px; }
-  .lvl { margin-bottom: 18px; }
-  .lvl-name { font-weight: 900; font-size: 1rem; margin-bottom: 8px; color: var(--c); }
-  .lvl-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-  .pick {
-    font-family: inherit; font-weight: 900; font-size: 1.15rem;
-    aspect-ratio: 1.25; border-radius: 14px; cursor: pointer;
-    background: #fff; color: var(--ink); border: 3px solid var(--c);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-    transition: transform 0.12s, background 0.15s;
+  #setup-select {
+    display: block; width: 100%; margin-bottom: 12px;
+    font-family: inherit; font-size: 1.15rem; font-weight: 900; color: var(--ink);
+    padding: 14px 44px 14px 16px; border: 3px solid var(--c); border-radius: 14px;
+    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23151515' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E") right 16px center / 14px no-repeat;
+    -webkit-appearance: none; appearance: none; cursor: pointer; outline: none;
+    transition: border-color 0.25s;
   }
-  .pick:hover { transform: translateY(-2px); }
-  .pick:active { transform: scale(0.95); }
+  #setup-select:focus-visible { box-shadow: 0 0 0 4px color-mix(in srgb, var(--c) 30%, transparent); }
+  .switch {
+    display: flex; align-items: center; gap: 8px; width: 100%; margin-bottom: 20px;
+    font-family: inherit; font-size: 1rem; font-weight: 900; color: var(--ink);
+    padding: 12px 16px; border: 3px solid #ddd; border-radius: 14px; background: #fff; cursor: pointer;
+  }
+  .switch .track {
+    margin-left: auto; position: relative; width: 52px; height: 30px; border-radius: 99px;
+    background: #ccc; transition: background 0.2s;
+  }
+  .switch .track::after {
+    content: ''; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px;
+    border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+    transition: transform 0.2s;
+  }
+  .switch[aria-checked="true"] .track { background: var(--c); }
+  .switch[aria-checked="true"] .track::after { transform: translateX(22px); }
+  .switch:focus-visible, #go-btn:focus-visible { outline: 3px solid var(--c); outline-offset: 3px; }
+  #go-btn {
+    display: block; width: 100%;
+    font-family: inherit; font-weight: 900; font-size: 1.35rem; letter-spacing: 0.15em;
+    padding: 15px; color: #fff; background: var(--c); border: none; border-radius: 999px;
+    box-shadow: 0 6px 18px color-mix(in srgb, var(--c) 40%, transparent);
+    cursor: pointer; transition: background 0.25s, transform 0.12s;
+  }
+  #go-btn:active { transform: scale(0.97); }
 
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { transition: none !important; animation: none !important; }
@@ -395,7 +441,11 @@
   <div id="setup-inner">
     <h2>🇹🇭 タイ語チャレンジ</h2>
     <p class="sub">チャレンジを選んでください</p>
-    <div id="levels"></div>
+    <select id="setup-select" aria-label="チャレンジを選ぶ"></select>
+    <button class="switch" id="audio-switch" role="switch" aria-checked="false">
+      <span id="audio-switch-icon">🔇</span> 音声<span class="track"></span>
+    </button>
+    <button id="go-btn">はじめる</button>
   </div>
 </div>
 
@@ -405,44 +455,6 @@
   <div class="vsep"></div>
   <select id="level-select" aria-label="チャレンジを選ぶ">
     <option value="">-- レベルを選んでください --</option>
-    <optgroup label="★ レベル1">
-      <option value="1a">チャレンジ 1a ★</option>
-      <option value="1b">チャレンジ 1b ★</option>
-      <option value="1c">チャレンジ 1c ★</option>
-      <option value="1d">チャレンジ 1d ★</option>
-      <option value="1e">チャレンジ 1e ★</option>
-      <option value="1f">チャレンジ 1f ★</option>
-    </optgroup>
-    <optgroup label="★★ レベル2">
-      <option value="2a">チャレンジ 2a ★★</option>
-      <option value="2b">チャレンジ 2b ★★</option>
-      <option value="2c">チャレンジ 2c ★★</option>
-      <option value="2d">チャレンジ 2d ★★</option>
-      <option value="2e">チャレンジ 2e ★★</option>
-      <option value="2f">チャレンジ 2f ★★</option>
-      <option value="2g">チャレンジ 2g ★★</option>
-    </optgroup>
-    <optgroup label="★★★ レベル3">
-      <option value="3a">チャレンジ 3a ★★★</option>
-      <option value="3b">チャレンジ 3b ★★★</option>
-      <option value="3c">チャレンジ 3c ★★★</option>
-      <option value="3d">チャレンジ 3d ★★★</option>
-      <option value="3e">チャレンジ 3e ★★★</option>
-      <option value="3f">チャレンジ 3f ★★★</option>
-      <option value="3g">チャレンジ 3g ★★★</option>
-    </optgroup>
-    <optgroup label="😮 レベル4">
-      <option value="4a">チャレンジ 4a 😮</option>
-      <option value="4b">チャレンジ 4b 😮</option>
-      <option value="4c">チャレンジ 4c 😮</option>
-      <option value="4d">チャレンジ 4d 😮</option>
-    </optgroup>
-    <optgroup label="🤯 レベル5">
-      <option value="5a">チャレンジ 5a 🤯</option>
-      <option value="5b">チャレンジ 5b 🤯</option>
-      <option value="5c">チャレンジ 5c 🤯</option>
-      <option value="5d">チャレンジ 5d 🤯</option>
-    </optgroup>
   </select>
 </div>
 
@@ -451,7 +463,7 @@
   <button class="tool-btn" id="undo-btn" disabled>↩ 戻す</button>
   <button class="tool-btn" id="clear-btn" disabled>🗑 クリア</button>
   <div id="pips" aria-hidden="true"></div>
-  <div id="toolbar-spacer"></div>
+  <div id="toolbar-spacer"><button class="tool-btn" id="audio-btn" aria-pressed="false" aria-label="音声"><span class="ico">🔇</span><span class="lbl">音声</span></button></div>
 </div>
 
 <!-- WORKSHEET -->
@@ -579,7 +591,7 @@ function load(key) {
     const lab = el('span', 'label');
     lab.append(el('span', 'th', thai));
     if (reading) lab.append(el('span', 'rd', reading));
-    b.append(lab, el('span', 'dot'));
+    b.append(el('span', 'say', '🔊'), lab, el('span', 'dot'));
     b.setAttribute('aria-label', reading ? `${thai} (${reading})` : thai);
     board.append(b);
   });
@@ -764,6 +776,7 @@ function tap(node) {
 let drag = null;
 
 board.addEventListener('pointerdown', e => {
+  if (e.target.closest('.say')) return;   // 🔊 is handled by click below
   const node = e.target.closest('.node');
   if (!node || !game || game.checked) return;
   e.preventDefault();
@@ -802,6 +815,8 @@ board.addEventListener('pointercancel', e => endDrag(e, true));
 
 // keyboard: Tab to a word, Enter/Space to pick it (pointer taps are handled above)
 board.addEventListener('click', e => {
+  const say = e.target.closest('.say');
+  if (say) return speak(say.closest('.node'));
   const node = e.target.closest('.node');
   if (node && e.detail === 0 && game && !game.checked) tap(node);
 });
@@ -886,23 +901,72 @@ document.addEventListener('keydown', e => {
 // ── SCREENS: title → level select → challenge ────────────────────────────
 const LEVEL_NAMES = { 1: '★ レベル1', 2: '★★ レベル2', 3: '★★★ レベル3', 4: '😮 レベル4', 5: '🤯 レベル5' };
 
-function showSetup() {
-  const wrap = $('levels');
-  wrap.replaceChildren();
+// both dropdowns are filled from challenges.js
+function fillLevels(sel) {
   for (const lvl of [...new Set(KEYS.map(k => k[0]))]) {
-    const sec = el('div', 'lvl');
-    sec.style.setProperty('--c', (THEMES[lvl] || THEMES[1]).accent);
-    sec.append(el('div', 'lvl-name', LEVEL_NAMES[lvl] || `レベル${lvl}`));
-    const grid = el('div', 'lvl-grid');
-    KEYS.filter(k => k[0] === lvl).forEach(k => {
-      const b = el('button', 'pick', k);
-      b.addEventListener('click', () => openChallenge(k));
-      grid.append(b);
-    });
-    sec.append(grid);
-    wrap.append(sec);
+    const grp = document.createElement('optgroup');
+    grp.label = LEVEL_NAMES[lvl] || `レベル${lvl}`;
+    KEYS.filter(k => k[0] === lvl).forEach(k =>
+      grp.append(new Option(`チャレンジ ${k} ${CHALLENGES[k].stars || ''}`.trim(), k)));
+    sel.append(grp);
   }
+}
+fillLevels(select);
+fillLevels($('setup-select'));
+
+// the page takes the colour of the chosen level
+function tintSetup() {
+  const lvl = $('setup-select').value[0];
+  $('setup').style.setProperty('--c', (THEMES[lvl] || THEMES[1]).accent);
+}
+$('setup-select').addEventListener('change', tintSetup);
+$('go-btn').addEventListener('click', () => openChallenge($('setup-select').value));
+
+function showSetup() {
+  if (game) $('setup-select').value = game.key;
+  tintSetup();
   $('setup').classList.remove('hide');
+}
+
+// ── AUDIO (off by default) ───────────────────────────────────────────────
+// Uses the device's own Thai voice (Web Speech API) — no sound files to upload.
+const canSpeak = 'speechSynthesis' in window;
+let audioOn = false, thaiVoice = null;
+try { audioOn = canSpeak && localStorage.getItem('audio') === 'on'; } catch {}
+
+function pickVoice() {
+  thaiVoice = speechSynthesis.getVoices()
+    .find(v => v.lang.replace('_', '-').toLowerCase().startsWith('th')) || null;
+}
+if (canSpeak) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+else { $('audio-switch').style.display = 'none'; $('audio-btn').style.display = 'none'; }
+
+function setAudio(on) {
+  audioOn = canSpeak && on;
+  try { localStorage.setItem('audio', audioOn ? 'on' : 'off'); } catch {}
+  document.body.classList.toggle('audio-on', audioOn);
+  $('audio-switch').setAttribute('aria-checked', audioOn);
+  $('audio-switch-icon').textContent = audioOn ? '🔊' : '🔇';
+  $('audio-btn').setAttribute('aria-pressed', audioOn);
+  $('audio-btn').querySelector('.ico').textContent = audioOn ? '🔊' : '🔇';
+  if (!audioOn && canSpeak) speechSynthesis.cancel();
+}
+$('audio-switch').addEventListener('click', () => setAudio(!audioOn));
+$('audio-btn').addEventListener('click', () => setAudio(!audioOn));
+setAudio(audioOn);
+
+function speak(node) {
+  if (!audioOn || !game) return;
+  board.querySelectorAll('.say.speaking').forEach(s => s.classList.remove('speaking'));
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(game.c.words[+node.dataset.i][0]);
+  u.lang = 'th-TH';
+  if (thaiVoice) u.voice = thaiVoice;
+  u.rate = 0.8;                             // a little slower for learners
+  const say = node.querySelector('.say');
+  say.classList.add('speaking');
+  u.onend = u.onerror = () => say.classList.remove('speaking');
+  speechSynthesis.speak(u);
 }
 
 function openChallenge(k) {
